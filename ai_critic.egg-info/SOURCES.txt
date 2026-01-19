@@ -1,0 +1,17 @@
+README.md
+pyproject.toml
+ai_critic/__init__.py
+ai_critic/critic.py
+ai_critic.egg-info/PKG-INFO
+ai_critic.egg-info/SOURCES.txt
+ai_critic.egg-info/dependency_links.txt
+ai_critic.egg-info/requires.txt
+ai_critic.egg-info/top_level.txt
+ai_critic/evaluators/__init__.py
+ai_critic/evaluators/config.py
+ai_critic/evaluators/data.py
+ai_critic/evaluators/performance.py
+ai_critic/evaluators/robustness.py
+ai_critic/evaluators/summary.py
+test/test_in_ia.py
+test/test_model.py

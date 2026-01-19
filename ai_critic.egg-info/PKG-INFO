@@ -1,3 +1,13 @@
+Metadata-Version: 2.4
+Name: ai-critic
+Version: 0.2.0
+Summary: Fast AI evaluator for scikit-learn models
+Author-email: Luiz Seabra <filipedemarco@yahoo.com>
+Requires-Python: >=3.9
+Description-Content-Type: text/markdown
+Requires-Dist: numpy
+Requires-Dist: scikit-learn
+
 # ai-critic
 
 Automated Risk Auditor for Machine Learning Models
