@@ -35,21 +35,22 @@ model = RandomForestClassifier(
 )
 
 # =========================
-# 4️⃣ Run AI Critic
+# 4️⃣ Run AI Critic with plots
 # =========================
 critic = AICritic(model, X_leaky, y)
+report = critic.evaluate(view="all", plot=True)  # <<< plot=True ativa os gráficos
 
 # =========================
-# 5️⃣ Selectable views
+# 5️⃣ Print selectable views
 # =========================
 print("\n================ EXECUTIVE VIEW ================\n")
-pprint(critic.evaluate(view="executive"))
+pprint(report["executive"])
 
 print("\n================ TECHNICAL VIEW ================\n")
-pprint(critic.evaluate(view="technical"))
+pprint(report["technical"])
 
 print("\n================ DETAILS VIEW ==================\n")
-pprint(critic.evaluate(view="details"))
+pprint(report["details"])
 
 print("\n================ MULTI VIEW ====================\n")
-pprint(critic.evaluate(view=["executive", "technical"]))
+pprint({k: report[k] for k in ["executive", "technical"]})

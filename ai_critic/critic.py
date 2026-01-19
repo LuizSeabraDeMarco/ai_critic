@@ -10,7 +10,7 @@ from ai_critic.evaluators.summary import HumanSummary
 class AICritic:
     """
     Automated reviewer for scikit-learn models.
-    Produces a multi-layered risk assessment.
+    Produces a multi-layered risk assessment with visualizations.
     """
 
     def __init__(self, model, X, y):
@@ -18,7 +18,7 @@ class AICritic:
         self.X = X
         self.y = y
 
-    def evaluate(self, view="all"):
+    def evaluate(self, view="all", plot=False):
         """
         view:
             - "all"
@@ -26,6 +26,9 @@ class AICritic:
             - "technical"
             - "details"
             - list of views
+        plot:
+            - True: gera gráficos de learning curve, heatmap e robustez
+            - False: sem gráficos
         """
 
         # =========================
@@ -33,24 +36,29 @@ class AICritic:
         # =========================
         details = {}
 
-        data_report = data(self.X, self.y)
+        # Data analysis + heatmap
+        data_report = data(self.X, self.y, plot=plot)
         details["data"] = data_report
 
+        # Model configuration
         details["config"] = config(
             self.model,
             n_samples=data_report["n_samples"],
             n_features=data_report["n_features"]
         )
 
+        # Performance + learning curve
         details["performance"] = performance(
-            self.model, self.X, self.y
+            self.model, self.X, self.y, plot=plot
         )
 
+        # Robustness + CV clean vs noisy
         details["robustness"] = robustness(
             self.model,
             self.X,
             self.y,
-            leakage_suspected=data_report["data_leakage"]["suspected"]
+            leakage_suspected=data_report["data_leakage"]["suspected"],
+            plot=plot
         )
 
         # =========================

@@ -1,10 +1,10 @@
 import numpy as np
 from sklearn.base import clone
 from sklearn.model_selection import cross_val_score
+import matplotlib.pyplot as plt
 
-def evaluate(model, X, y, leakage_suspected=False):
+def evaluate(model, X, y, leakage_suspected=False, plot=False):
     noise_level = 0.02  # 2% relative noise
-
     scale = np.std(X)
     noise = np.random.normal(0, noise_level * scale, X.shape)
     X_noisy = X + noise
@@ -12,18 +12,12 @@ def evaluate(model, X, y, leakage_suspected=False):
     model_clean = clone(model)
     model_noisy = clone(model)
 
-    score_clean = cross_val_score(
-        model_clean, X, y, cv=3, n_jobs=1
-    ).mean()
-
-    score_noisy = cross_val_score(
-        model_noisy, X_noisy, y, cv=3, n_jobs=1
-    ).mean()
-
+    score_clean = cross_val_score(model_clean, X, y, cv=3, n_jobs=1).mean()
+    score_noisy = cross_val_score(model_noisy, X_noisy, y, cv=3, n_jobs=1).mean()
     drop = score_clean - score_noisy
 
     # =========================
-    # Semantic robustness logic
+    # Verdict
     # =========================
     if leakage_suspected and score_clean > 0.98:
         verdict = "misleading"
@@ -37,6 +31,19 @@ def evaluate(model, X, y, leakage_suspected=False):
     else:
         verdict = "stable"
         message = "Model shows acceptable robustness to noise."
+
+    # =========================
+    # Plot CV Clean vs Noisy
+    # =========================
+    if plot:
+        plt.figure(figsize=(4,4))
+        plt.bar(["Original", "Com Ruído"], [score_clean, score_noisy], color=['green','red'])
+        plt.ylabel("CV Score")
+        plt.title("Robustez do Modelo")
+        plt.ylim(0, 1)
+        plt.tight_layout()
+        plt.savefig("robustness.png", dpi=150)  # Salva automaticamente
+        plt.show()
 
     return {
         "cv_score_original": float(score_clean),
