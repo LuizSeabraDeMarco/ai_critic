@@ -78,6 +78,13 @@ class HumanSummary:
             recommendations.append(
                 "Fix baseline performance issues before trusting robustness metrics."
             )
+        elif robustness_verdict == "fragile":
+            key_risks.append(
+                "Model is fragile under noise perturbations."
+            )
+            recommendations.append(
+                "Consider regularization or simpler model architecture."
+            )
 
         technical_summary = {
             "key_risks": key_risks or ["No significant risks detected."],

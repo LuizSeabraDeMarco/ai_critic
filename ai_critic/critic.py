@@ -20,15 +20,19 @@ class AICritic:
 
     def evaluate(self, view="all", plot=False):
         """
-        view:
-            - "all"
-            - "executive"
-            - "technical"
-            - "details"
-            - list of views
-        plot:
-            - True: gera gráficos de learning curve, heatmap e robustez
-            - False: sem gráficos
+        Evaluate the model.
+
+        Parameters:
+        -----------
+        view : str or list
+            - "all" : return full payload
+            - "executive" : only executive summary
+            - "technical" : only technical summary
+            - "details" : only low-level module outputs
+            - list : subset of views
+        plot : bool
+            - True : generate plots (learning curve, heatmap, robustness)
+            - False : no plots
         """
 
         # =========================
@@ -37,23 +41,23 @@ class AICritic:
         details = {}
 
         # Data analysis + heatmap
-        data_report = data(self.X, self.y, plot=plot)
+        data_report = data.evaluate(self.X, self.y, plot=plot)
         details["data"] = data_report
 
         # Model configuration
-        details["config"] = config(
+        details["config"] = config.evaluate(
             self.model,
             n_samples=data_report["n_samples"],
             n_features=data_report["n_features"]
         )
 
         # Performance + learning curve
-        details["performance"] = performance(
+        details["performance"] = performance.evaluate(
             self.model, self.X, self.y, plot=plot
         )
 
         # Robustness + CV clean vs noisy
-        details["robustness"] = robustness(
+        details["robustness"] = robustness.evaluate(
             self.model,
             self.X,
             self.y,

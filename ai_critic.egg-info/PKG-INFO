@@ -1,6 +1,6 @@
 Metadata-Version: 2.4
 Name: ai-critic
-Version: 0.2.1
+Version: 0.2.2
 Summary: Fast AI evaluator for scikit-learn models
 Author-email: Luiz Seabra <filipedemarco@yahoo.com>
 Requires-Python: >=3.9
@@ -8,54 +8,49 @@ Description-Content-Type: text/markdown
 Requires-Dist: numpy
 Requires-Dist: scikit-learn
 
-# ai-critic: Automated Risk Auditor for Machine Learning Models**
+# ai-critic: Automated Risk Auditor for Machine Learning Models
+
+[![PyPI version](https://img.shields.io/pypi/v/ai-critic.svg)](https://pypi.org/project/ai-critic/)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+[![Python Versions](https://img.shields.io/pypi/pyversions/ai-critic.svg)](https://pypi.org/project/ai-critic/)
+
+O **ai-critic** é um auditor de risco automatizado baseado em heurísticas para modelos de Machine Learning. Ele avalia modelos treinados antes da implantação e traduz riscos técnicos complexos em decisões claras e centradas no ser humano.
+
+Diferente das ferramentas tradicionais que focam apenas em métricas de desempenho, o **ai-critic** adota uma postura cética por design, respondendo à pergunta fundamental: **“Este modelo pode ser implantado com segurança?”**
 
 ---
 
-## 🚀 What is ai-critic?
+## 🚀 O que é o ai-critic?
 
-`ai-critic` é um **auditor de risco automatizado baseado em heurísticas** para modelos de *machine learning*. Ele avalia modelos treinados antes da implantação e traduz riscos técnicos de ML em decisões claras e centradas no ser humano.
+O `ai-critic` avalia modelos treinados antes da implantação, analisando quatro áreas principais de risco:
 
-Em vez de apenas relatar métricas, o `ai-critic` responde à pergunta crítica:
-
-> “Este modelo pode ser implantado com segurança?”
-
-Ele faz isso analisando as principais áreas de risco:
-
-*   **Integridade dos Dados:** (*data leakage*, desequilíbrio, NaNs)
-*   **Estrutura do Modelo:** (risco de *overfitting*, complexidade)
-*   **Comportamento de Validação:** (pontuações suspeitamente perfeitas)
-*   **Robustez:** (sensibilidade a ruído)
+*   **Integridade dos Dados:** (*data leakage*, desequilíbrio, NaNs).
+*   **Estrutura do Modelo:** (risco de *overfitting*, complexidade, configurações suspeitas).
+*   **Comportamento de Validação:** (pontuações suspeitamente perfeitas de cross-validation).
+*   **Robustez:** (sensibilidade a ruído e estabilidade do modelo).
 
 Os resultados são organizados em três camadas semânticas para diferentes *stakeholders*:
+*   **Executiva:** Decisões para stakeholders e gerentes.
+*   **Técnica:** Diagnósticos para engenheiros de ML.
+*   **Detalhada:** Saída completa de métricas e análises técnicas, incluindo gráficos opcionais.
 
-*   **Executiva:** (tomadores de decisão)
-*   **Técnica:** (engenheiros de ML)
-*   **Detalhada:** (auditores e depuração)
+---
 
 ## 🎯 Por que o ai-critic Existe: Filosofia Central
 
-A maioria das ferramentas de ML:
+A maioria das ferramentas de ML tradicionais assume que métricas são a verdade absoluta, confia cegamente na validação cruzada e entrega números brutos sem interpretação.
 
-*   assume que métricas = verdade
-*   confia cegamente na validação cruzada
-*   despeja números brutos sem interpretação
+O **ai-critic** é cético por design. Ele trata:
+*   **Pontuações perfeitas** como sinais de alerta, não necessariamente sucesso.
+*   **Métricas de robustez** como dependentes do contexto.
+*   **Implantação** como uma decisão de gestão de risco, não apenas uma meta técnica.
 
-O `ai-critic` é cético por design.
-
-Ele trata:
-
-*   pontuações perfeitas como **sinais**, não sucesso
-*   métricas de robustez como **dependentes do contexto**
-*   implantação como uma **decisão de risco**, não um limite de métrica
-
-A filosofia central é: **Métricas não falham modelos — o contexto falha.**
-
-O `ai-critic` aplica heurísticas de raciocínio humano à avaliação de ML:
-
+A filosofia central é: **Métricas não falham modelos — o contexto falha.** O `ai-critic` aplica heurísticas de raciocínio humano:
 *   “Isso é bom demais para ser verdade?”
 *   “Isso pode estar vazando o alvo (*target*)?”
 *   “A robustez importa se a linha de base estiver errada?”
+
+---
 
 ## 🛠️ Instalação
 
@@ -66,9 +61,11 @@ pip install ai-critic
 ```
 
 **Requisitos:**
-
 *   Python ≥ 3.8
 *   `scikit-learn`
+*   `matplotlib`, `seaborn`, `numpy`, `pandas` (para visualizações opcionais)
+
+---
 
 ## 💡 Início Rápido
 
@@ -82,30 +79,30 @@ from ai_critic import AICritic
 # 1. Carregar dados e treinar um modelo (exemplo)
 X, y = load_breast_cancer(return_X_y=True)
 model = RandomForestClassifier(max_depth=20, random_state=42)
-model.fit(X, y)  # O modelo deve estar treinado
+model.fit(X, y)
 
 # 2. Inicializar e avaliar com ai-critic
 critic = AICritic(model, X, y)
-report = critic.evaluate()
 
-# A visualização padrão é 'all' (todas as camadas)
+# Realização de avaliação completa (padrão view="all")
+report = critic.evaluate(plot=True)
 print(report)
 ```
 
+---
+
 ## 🧩 Saída Multi-Camadas
 
-O `ai-critic` nunca despeja tudo de uma vez. Ele estrutura os resultados em camadas de decisão claras.
+O `ai-critic` estrutura os resultados em camadas de decisão claras através do parâmetro `view`.
 
 ### 🔹 Visualização Executiva (`view="executive"`)
-
-Projetado para CTOs, gerentes e *stakeholders*. Sem jargão de ML.
+Projetado para stakeholders e gestores. Sem jargão técnico.
 
 ```python
 critic.evaluate(view="executive")
 ```
 
 **Exemplo de Saída:**
-
 ```json
 {
   "verdict": "❌ Não Confiável",
@@ -116,15 +113,13 @@ critic.evaluate(view="executive")
 ```
 
 ### 🔹 Visualização Técnica (`view="technical"`)
-
-Projetado para engenheiros de ML. Acionável, diagnóstico e focado no que precisa ser corrigido.
+Projetado para engenheiros de ML. Focado em diagnósticos e ações corretivas.
 
 ```python
 critic.evaluate(view="technical")
 ```
 
 **Exemplo de Saída:**
-
 ```json
 {
   "key_risks": [
@@ -147,112 +142,84 @@ critic.evaluate(view="technical")
 ```
 
 ### 🔹 Visualização Detalhada (`view="details"`)
-
-Projetado para auditoria, depuração e conformidade.
+Projetado para auditoria, depuração e conformidade. Agrega todos os outputs dos módulos internos.
 
 ```python
-critic.evaluate(view="details")
+details = critic.evaluate(view="details")
+print(details["data"]["class_balance"])
+print(details["robustness"]["performance_drop"])
 ```
-
-Inclui:
-
-*   Métricas brutas
-*   Correlações de recursos
-*   Pontuações de robustez
-*   Avisos estruturais
-*   Rastreabilidade completa
 
 ### 🔹 Visualização Combinada (`view="all"`)
+Retorna todas as três camadas em um único dicionário, facilitando a integração com pipelines de CI/CD.
 
-Retorna todas as três camadas em um único dicionário.
+---
 
+## 📊 Visualizações e Gráficos
+
+Ao definir `plot=True` no método `evaluate()`, o `ai-critic` gera automaticamente:
+*   **Heatmap de Correlação:** Identificação visual de vazamento de dados.
+*   **Learning Curve:** Diagnóstico de overfitting e necessidade de mais dados.
+*   **Gráfico de Robustez:** Visualização da queda de performance sob ruído.
+
+---
+
+## ⚙️ API Principal e Modularização
+
+### `AICritic(model, X, y)`
+*   `model`: Modelo `scikit-learn` treinado.
+*   `X`: Matriz de recursos.
+*   `y`: Vetor alvo.
+
+### `evaluate(view="all", plot=False)`
+*   `view`: Camada de saída (`"executive"`, `"technical"`, `"details"`, `"all"` ou lista customizada).
+*   `plot`: `True` para gerar gráficos automáticos.
+
+### Uso Modular (Avançado)
+Cada módulo retorna um dicionário padronizado consistente:
 ```python
-critic.evaluate(view="all")
+from ai_critic.evaluators import data, config, performance, robustness
+
+data_report = data.evaluate(X, y, plot=True)
+config_report = config.evaluate(model, n_samples=data_report["n_samples"], n_features=data_report["n_features"])
 ```
 
-**Retorna:**
-
-```json
-{
-  "executive": {...},
-  "technical": {...},
-  "details": {...}
-}
-```
-
-## ⚙️ API Principal
-
-### `AICritic`
-
-| Parâmetro | Descrição |
-| :--- | :--- |
-| `model` | Modelo `scikit-learn` treinado |
-| `X` | Matriz de recursos |
-| `y` | Vetor alvo |
-
-**Uso:** `AICritic(model, X, y)`
-
-### `evaluate()`
-
-| Parâmetro | Descrição |
-| :--- | :--- |
-| `view` | Camada de saída desejada: `"executive"`, `"technical"`, `"details"`, ou `"all"` (padrão) |
-
-**Uso:** `evaluate(view="all")`
+---
 
 ## 🧠 O que o ai-critic Detecta
 
 | Categoria | Riscos Detectados |
 | :--- | :--- |
-| **🔍 Riscos de Dados** | Vazamento de alvo via correlação, NaNs, desequilíbrio de classes |
-| **🧱 Riscos Estruturais** | Árvores excessivamente complexas, altas taxas de recurso/amostra, *configuration smells* |
-| **📈 Riscos de Validação** | Pontuações de CV suspeitosamente perfeitas, variância irreal |
-| **🧪 Riscos de Robustez** | Sensibilidade a ruído, robustez enganosa se a linha de base estiver inflada |
+| **🔍 Dados** | Vazamento de alvo via correlação, NaNs, desequilíbrio de classes. |
+| **🧱 Estrutura** | Árvores excessivamente complexas, altas taxas de recurso/amostra, configurações suspeitas. |
+| **📈 Validação** | Pontuações de CV suspeitosamente perfeitas, variância irreal. |
+| **🧪 Robustez** | Sensibilidade a ruído, robustez enganosa (stable, fragile, misleading). |
 
-## 🧪 Exemplo: Detectando Vazamento de Dados
-
-```python
-import numpy as np
-# ... (imports e código do modelo)
-
-# Vazamento artificial: adicionando o alvo como um recurso
-X_leaky = np.hstack([X, y.reshape(-1, 1)])
-
-critic = AICritic(model, X_leaky, y)
-executive_report = critic.evaluate(view="executive")
-
-print(executive_report)
-```
-
-**Saída (Visualização Executiva):**
-
-```
-❌ Não Confiável
-Forte evidência de vazamento de dados inflando o desempenho do modelo.
-```
+---
 
 ## 🛡️ Melhores Práticas
 
-*   Execute o `ai-critic` antes da implantação.
-*   Nunca confie cegamente em pontuações de CV perfeitas.
-*   Use a Visualização Executiva em seu *pipeline* de CI/CD como um portão de modelo.
-*   Use a Visualização Técnica durante a iteração do modelo.
-*   Use a Visualização Detalhada para auditoria e conformidade.
+*   **CI/CD:** Use a Visualização Executiva como um portão de qualidade automatizado.
+*   **Debugging:** Use a Visualização Técnica durante a iteração do modelo.
+*   **Compliance:** Utilize a Visualização Detalhada para rastreabilidade e auditoria.
+*   **Ceticismo:** Nunca confie cegamente em pontuações de CV perfeitas.
+
+---
 
 ## 🧭 Casos de Uso Típicos
+*   Auditorias de modelo pré-implantação.
+*   Governança e conformidade de ML.
+*   Portões de modelo em pipelines CI/CD.
+*   Explicação de riscos para stakeholders não técnicos.
 
-*   Auditorias de modelo pré-implantação
-*   Governança e conformidade de ML
-*   Portões de modelo CI/CD
-*   Ensino de ceticismo em ML
-*   Explicação de risco de ML para *stakeholders* não técnicos
+---
 
 ## 📄 Licença
 
-Distribuído sob a Licença MIT.
+Distribuído sob a **MIT License**.
+
+---
 
 ## 🧠 Nota Final
 
-O `ai-critic` não é uma ferramenta de *benchmarking*. É uma **ferramenta de decisão**.
-
-Se um modelo falhar aqui, não significa que seja ruim — significa que **não deve ser confiável ainda**.
+O **ai-critic** não é uma ferramenta de benchmarking. É uma **ferramenta de decisão**. Se um modelo falhar aqui, não significa que seja ruim — significa que **não deve ser confiável ainda**.
