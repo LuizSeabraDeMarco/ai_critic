@@ -1,4 +1,11 @@
-from .robustness import evaluate as robustness
-from .config import evaluate as config
-from .data import evaluate as data
-from .performance import evaluate as performance
+from . import data
+from . import performance
+from . import robustness
+from . import config
+
+__all__ = [
+    "data",
+    "performance",
+    "robustness",
+    "config",
+]

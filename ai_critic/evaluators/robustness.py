@@ -12,8 +12,13 @@ def evaluate(model, X, y, leakage_suspected=False, plot=False):
     model_clean = clone(model)
     model_noisy = clone(model)
 
-    score_clean = cross_val_score(model_clean, X, y, cv=3, n_jobs=1).mean()
-    score_noisy = cross_val_score(model_noisy, X_noisy, y, cv=3, n_jobs=1).mean()
+    from .validation import make_cv
+
+    cv = make_cv(y)
+
+    score_clean = cross_val_score(model_clean, X, y, cv=cv, n_jobs=1).mean()
+    score_noisy = cross_val_score(model_noisy, X_noisy, y, cv=cv, n_jobs=1).mean()
+
     drop = score_clean - score_noisy
 
     # =========================

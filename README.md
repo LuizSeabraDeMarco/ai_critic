@@ -1,215 +1,66 @@
-# ai-critic: Automated Risk Auditor for Machine Learning Models
+Performance under noise
 
-[![PyPI version](https://img.shields.io/pypi/v/ai-critic.svg)](https://pypi.org/project/ai-critic/)
-[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
-[![Python Versions](https://img.shields.io/pypi/pyversions/ai-critic.svg)](https://pypi.org/project/ai-critic/)
-
-O **ai-critic** é um auditor de risco automatizado baseado em heurísticas para modelos de Machine Learning. Ele avalia modelos treinados antes da implantação e traduz riscos técnicos complexos em decisões claras e centradas no ser humano.
-
-Diferente das ferramentas tradicionais que focam apenas em métricas de desempenho, o **ai-critic** adota uma postura cética por design, respondendo à pergunta fundamental: **“Este modelo pode ser implantado com segurança?”**
+> Visualizations are optional and do not affect the decision logic.
 
 ---
 
-## 🚀 O que é o ai-critic?
-
-O `ai-critic` avalia modelos treinados antes da implantação, analisando quatro áreas principais de risco:
-
-*   **Integridade dos Dados:** (*data leakage*, desequilíbrio, NaNs).
-*   **Estrutura do Modelo:** (risco de *overfitting*, complexidade, configurações suspeitas).
-*   **Comportamento de Validação:** (pontuações suspeitamente perfeitas de cross-validation).
-*   **Robustez:** (sensibilidade a ruído e estabilidade do modelo).
-
-Os resultados são organizados em três camadas semânticas para diferentes *stakeholders*:
-*   **Executiva:** Decisões para stakeholders e gerentes.
-*   **Técnica:** Diagnósticos para engenheiros de ML.
-*   **Detalhada:** Saída completa de métricas e análises técnicas, incluindo gráficos opcionais.
-
----
-
-## 🎯 Por que o ai-critic Existe: Filosofia Central
-
-A maioria das ferramentas de ML tradicionais assume que métricas são a verdade absoluta, confia cegamente na validação cruzada e entrega números brutos sem interpretação.
-
-O **ai-critic** é cético por design. Ele trata:
-*   **Pontuações perfeitas** como sinais de alerta, não necessariamente sucesso.
-*   **Métricas de robustez** como dependentes do contexto.
-*   **Implantação** como uma decisão de gestão de risco, não apenas uma meta técnica.
-
-A filosofia central é: **Métricas não falham modelos — o contexto falha.** O `ai-critic` aplica heurísticas de raciocínio humano:
-*   “Isso é bom demais para ser verdade?”
-*   “Isso pode estar vazando o alvo (*target*)?”
-*   “A robustez importa se a linha de base estiver errada?”
-
----
-
-## 🛠️ Instalação
-
-Instale o `ai-critic` via pip:
-
-```bash
-pip install ai-critic
-```
-
-**Requisitos:**
-*   Python ≥ 3.8
-*   `scikit-learn`
-*   `matplotlib`, `seaborn`, `numpy`, `pandas` (para visualizações opcionais)
-
----
-
-## 💡 Início Rápido
-
-Audite seu modelo treinado em apenas algumas linhas:
-
-```python
-from sklearn.datasets import load_breast_cancer
-from sklearn.ensemble import RandomForestClassifier
-from ai_critic import AICritic
-
-# 1. Carregar dados e treinar um modelo (exemplo)
-X, y = load_breast_cancer(return_X_y=True)
-model = RandomForestClassifier(max_depth=20, random_state=42)
-model.fit(X, y)
-
-# 2. Inicializar e avaliar com ai-critic
-critic = AICritic(model, X, y)
-
-# Realização de avaliação completa (padrão view="all")
-report = critic.evaluate(plot=True)
-print(report)
-```
-
----
-
-## 🧩 Saída Multi-Camadas
-
-O `ai-critic` estrutura os resultados em camadas de decisão claras através do parâmetro `view`.
-
-### 🔹 Visualização Executiva (`view="executive"`)
-Projetado para stakeholders e gestores. Sem jargão técnico.
-
-```python
-critic.evaluate(view="executive")
-```
-
-**Exemplo de Saída:**
-```json
-{
-  "verdict": "❌ Não Confiável",
-  "risk_level": "high",
-  "deploy_recommended": false,
-  "main_reason": "Forte evidência de vazamento de dados inflando o desempenho do modelo."
-}
-```
-
-### 🔹 Visualização Técnica (`view="technical"`)
-Projetado para engenheiros de ML. Focado em diagnósticos e ações corretivas.
-
-```python
-critic.evaluate(view="technical")
-```
-
-**Exemplo de Saída:**
-```json
-{
-  "key_risks": [
-    "Vazamento de dados suspeito devido à correlação quase perfeita entre recurso e alvo.",
-    "Pontuação de validação cruzada perfeita detectada (estatisticamente improvável).",
-    "A profundidade da árvore pode ser muito alta para o tamanho do conjunto de dados."
-  ],
-  "model_health": {
-    "data_leakage": true,
-    "suspicious_cv": true,
-    "structural_risk": true,
-    "robustness_verdict": "misleading"
-  },
-  "recommendations": [
-    "Auditar e remover recursos com vazamento.",
-    "Reduzir a complexidade do modelo.",
-    "Executar novamente a validação após a mitigação do vazamento."
-  ]
-}
-```
-
-### 🔹 Visualização Detalhada (`view="details"`)
-Projetado para auditoria, depuração e conformidade. Agrega todos os outputs dos módulos internos.
-
-```python
-details = critic.evaluate(view="details")
-print(details["data"]["class_balance"])
-print(details["robustness"]["performance_drop"])
-```
-
-### 🔹 Visualização Combinada (`view="all"`)
-Retorna todas as três camadas em um único dicionário, facilitando a integração com pipelines de CI/CD.
-
----
-
-## 📊 Visualizações e Gráficos
-
-Ao definir `plot=True` no método `evaluate()`, o `ai-critic` gera automaticamente:
-*   **Heatmap de Correlação:** Identificação visual de vazamento de dados.
-*   **Learning Curve:** Diagnóstico de overfitting e necessidade de mais dados.
-*   **Gráfico de Robustez:** Visualização da queda de performance sob ruído.
-
----
-
-## ⚙️ API Principal e Modularização
+## ⚙️ Main API
 
 ### `AICritic(model, X, y)`
-*   `model`: Modelo `scikit-learn` treinado.
-*   `X`: Matriz de recursos.
-*   `y`: Vetor alvo.
+
+* `model`: scikit-learn compatible estimator
+* `X`: feature matrix
+* `y`: target vector
 
 ### `evaluate(view="all", plot=False)`
-*   `view`: Camada de saída (`"executive"`, `"technical"`, `"details"`, `"all"` ou lista customizada).
-*   `plot`: `True` para gerar gráficos automáticos.
 
-### Uso Modular (Avançado)
-Cada módulo retorna um dicionário padronizado consistente:
-```python
-from ai_critic.evaluators import data, config, performance, robustness
-
-data_report = data.evaluate(X, y, plot=True)
-config_report = config.evaluate(model, n_samples=data_report["n_samples"], n_features=data_report["n_features"])
-```
+* `view`: `"executive"`, `"technical"`, `"details"`, `"all"` or custom list
+* `plot`: generates graphs when `True`
 
 ---
 
-## 🧠 O que o ai-critic Detecta
+## 🧠 What ai-critic Detects
 
-| Categoria | Riscos Detectados |
-| :--- | :--- |
-| **🔍 Dados** | Vazamento de alvo via correlação, NaNs, desequilíbrio de classes. |
-| **🧱 Estrutura** | Árvores excessivamente complexas, altas taxas de recurso/amostra, configurações suspeitas. |
-| **📈 Validação** | Pontuações de CV suspeitosamente perfeitas, variância irreal. |
-| **🧪 Robustez** | Sensibilidade a ruído, robustez enganosa (stable, fragile, misleading). |
+| Category | Risks |
 
----
+| ------------ | ---------------------------------------- |
 
-## 🛡️ Melhores Práticas
+| 🔍 Data | Target Leakage, NaNs, Imbalance |
 
-*   **CI/CD:** Use a Visualização Executiva como um portão de qualidade automatizado.
-*   **Debugging:** Use a Visualização Técnica durante a iteração do modelo.
-*   **Compliance:** Utilize a Visualização Detalhada para rastreabilidade e auditoria.
-*   **Ceticismo:** Nunca confie cegamente em pontuações de CV perfeitas.
+| 🧱 Structure | Excessive Complexity, Overfitting |
+
+| 📈 Validation | Perfect or Statistically Suspicious CV |
+
+| 🧪 Robustness | Stable, Fragile, or Misleading |
 
 ---
 
-## 🧭 Casos de Uso Típicos
-*   Auditorias de modelo pré-implantação.
-*   Governança e conformidade de ML.
-*   Portões de modelo em pipelines CI/CD.
-*   Explicação de riscos para stakeholders não técnicos.
+## 🛡️ Best Practices
+
+* **CI/CD:** Use executive output as a *quality gate*
+* **Iteration:** Use technical output during tuning
+* **Governance:** Log detailed output
+* **Skepticism:** Never blindly trust a perfect CV
 
 ---
 
-## 📄 Licença
+## 🧭 Use Cases
 
-Distribuído sob a **MIT License**.
+* Pre-deployment Audit
+* ML Governance
+* CI/CD Pipelines
+* Risk Communication for Non-Technical Users
 
 ---
 
-## 🧠 Nota Final
+## 📄 License
 
-O **ai-critic** não é uma ferramenta de benchmarking. É uma **ferramenta de decisão**. Se um modelo falhar aqui, não significa que seja ruim — significa que **não deve ser confiável ainda**.
+Distributed under the **MIT License**.
+
+---
+
+## 🧠 Final Note
+
+**ai-critic** is not a *benchmarking* tool. It's a **decision-making tool**.
+
+If a model fails here, it doesn't mean it's bad—it means it **shouldn't be trusted yet**.
