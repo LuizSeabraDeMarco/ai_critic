@@ -1,57 +1,225 @@
-Performance under noise
+# ai-critic 🧠: The Quality Gate for Machine Learning Models
 
-> Visualizations are optional and do not affect the decision logic.
+**ai-critic** is a specialized **decision-making** tool designed to audit the reliability and readiness for deployment of scikit-learn–compatible Machine Learning models.
 
----
+Instead of merely measuring performance (accuracy, F1 score), **ai-critic** acts as a **Quality Gate**, actively probing the model to uncover *hidden risks* that commonly cause production failures — such as **data leakage**, **structural overfitting**, and **fragility under noise**.
 
-## ⚙️ Main API
-
-### `AICritic(model, X, y)`
-
-* `model`: scikit-learn compatible estimator
-* `X`: feature matrix
-* `y`: target vector
-
-### `evaluate(view="all", plot=False)`
-
-* `view`: `"executive"`, `"technical"`, `"details"`, `"all"` or custom list
-* `plot`: generates graphs when `True`
+> **ai-critic does not ask “How good is this model?”**
+> It asks **“Can this model be trusted?”**
 
 ---
 
-## 🧠 What ai-critic Detects
+## 🚀  Getting Started (The Basics)
 
-| Category | Risks |
+This section is ideal for beginners who need a **fast and reliable verdict** on a trained model.
 
-| ------------ | ---------------------------------------- |
+###  Installation
 
-| 🔍 Data | Target Leakage, NaNs, Imbalance |
+Install directly from PyPI:
 
-| 🧱 Structure | Excessive Complexity, Overfitting |
-
-| 📈 Validation | Perfect or Statistically Suspicious CV |
-
-| 🧪 Robustness | Stable, Fragile, or Misleading |
+```bash
+pip install ai-critic
+```
 
 ---
 
-## 🛡️ Best Practices
+###  The Quick Verdict
 
-* **CI/CD:** Use executive output as a *quality gate*
-* **Iteration:** Use technical output during tuning
-* **Governance:** Log detailed output
-* **Skepticism:** Never blindly trust a perfect CV
+With just a few lines of code, you obtain an **executive-level assessment** and a **deployment recommendation**.
+
+```python
+from ai_critic import AICritic
+from sklearn.ensemble import RandomForestClassifier
+from sklearn.datasets import make_classification
+
+# 1. Prepare data and model
+X, y = make_classification(n_samples=1000, n_features=20, random_state=42)
+model = RandomForestClassifier(max_depth=5, random_state=42)
+
+# 2. Initialize the Critic
+critic = AICritic(model, X, y)
+
+# 3. Run the audit (executive mode)
+report = critic.evaluate(view="executive")
+
+print(f"Verdict: {report['verdict']}")
+print(f"Risk Level: {report['risk_level']}")
+print(f"Main Reason: {report['main_reason']}")
+```
+
+**Expected Output (example):**
+
+```text
+Verdict: ⚠️ Risky
+Risk Level: medium
+Main Reason: Structural or robustness-related risks detected.
+```
+
+This output is intentionally **conservative**.
+If **ai-critic** recommends deployment, it means meaningful risks were *not* detected.
 
 ---
 
-## 🧭 Use Cases
+## 💡  Understanding the Critique (The Intermediary)
 
-* Pre-deployment Audit
-* ML Governance
-* CI/CD Pipelines
-* Risk Communication for Non-Technical Users
+For data scientists who want to understand **why** the model received a given verdict and **how to improve it**.
 
 ---
+
+###  The Four Pillars of the Audit
+
+**ai-critic** evaluates models across four independent risk dimensions:
+
+| Pillar                 | Main Risk Detected                     | Internal Module          |
+| ---------------------- | -------------------------------------- | ------------------------ |
+| 📊 **Data Integrity**  | Target Leakage & Correlation Artifacts | `evaluators.data`        |
+| 🧠 **Model Structure** | Over-complexity & Misconfiguration     | `evaluators.config`      |
+| 📈 **Performance**     | Suspicious CV or Learning Curves       | `evaluators.performance` |
+| 🧪 **Robustness**      | Sensitivity to Noise                   | `evaluators.robustness`  |
+
+Each pillar contributes signals used later in the **deployment gate**.
+
+---
+
+###  Full Technical & Visual Analysis
+
+To access **all internal diagnostics**, including plots and recommendations, use `view="all"`.
+
+```python
+full_report = critic.evaluate(view="all", plot=True)
+
+technical_summary = full_report["technical"]
+
+print("\n--- Key Risks Detected ---")
+for i, risk in enumerate(technical_summary["key_risks"], start=1):
+    print(f"{i}. {risk}")
+
+print("\n--- Recommendations ---")
+for rec in technical_summary["recommendations"]:
+    print(f"- {rec}")
+```
+
+Generated plots may include:
+
+* Feature correlation heatmaps
+* Learning curves
+* Robustness degradation charts
+
+---
+
+###  Robustness Test (Noise Injection)
+
+A model that collapses under small perturbations is **not production-safe**.
+
+```python
+robustness = full_report["details"]["robustness"]
+
+print("\n--- Robustness Analysis ---")
+print(f"Original CV Score: {robustness['cv_score_original']:.4f}")
+print(f"Noisy CV Score: {robustness['cv_score_noisy']:.4f}")
+print(f"Performance Drop: {robustness['performance_drop']:.4f}")
+print(f"Verdict: {robustness['verdict']}")
+```
+
+**Possible Verdicts:**
+
+* `stable` → acceptable degradation
+* `fragile` → high sensitivity to noise
+* `misleading` → performance likely inflated by leakage
+
+---
+
+## ⚙️  Integration and Governance (The Advanced)
+
+This section targets **MLOps engineers**, **architects**, and teams operating automated pipelines.
+
+---
+
+###  The Deployment Gate (`deploy_decision`)
+
+The `deploy_decision()` method aggregates *all detected risks* and produces a final gate decision.
+
+```python
+decision = critic.deploy_decision()
+
+if decision["deploy"]:
+    print("✅ Deployment Approved")
+else:
+    print("❌ Deployment Blocked")
+
+print(f"Risk Level: {decision['risk_level']}")
+print(f"Confidence Score: {decision['confidence']:.2f}")
+
+print("\nBlocking Issues:")
+for issue in decision["blocking_issues"]:
+    print(f"- {issue}")
+```
+
+**Conceptual model:**
+
+* **Hard Blockers** → deployment denied
+* **Soft Blockers** → deployment discouraged
+* **Confidence Score (0–1)** → heuristic trust level
+
+---
+
+###  Modes & Views (API Design)
+
+The `evaluate()` method supports **multiple modes** via the `view` parameter:
+
+| View          | Description                        |
+| ------------- | ---------------------------------- |
+| `"executive"` | High-level verdict (non-technical) |
+| `"technical"` | Risks & recommendations            |
+| `"details"`   | Raw evaluator outputs              |
+| `"all"`       | Complete payload                   |
+
+Example:
+
+```python
+critic.evaluate(view="technical")
+critic.evaluate(view=["executive", "performance"])
+```
+
+---
+
+###  Session Tracking & Model Comparison (New in 1.0.0)
+
+You can persist evaluations and compare model versions over time.
+
+```python
+critic_v1 = AICritic(model, X, y, session="v1")
+critic_v1.evaluate()
+
+critic_v2 = AICritic(model, X, y, session="v2")
+critic_v2.evaluate()
+
+comparison = critic_v2.compare_with("v1")
+print(comparison["score_diff"])
+```
+
+This enables:
+
+* Regression tracking
+* Risk drift detection
+* Governance & audit trails
+
+---
+
+###  Best Practices & Use Cases
+
+| Scenario                | Recommended Usage                      |
+| ----------------------- | -------------------------------------- |
+| **CI/CD**               | Block merges using `deploy_decision()` |
+| **Model Tuning**        | Use technical view for guidance        |
+| **Governance**          | Persist session outputs                |
+| **Stakeholder Reports** | Share executive summaries              |
+
+---
+## 🔒 API Stability
+
+Starting from version **1.0.0**, the public API of **ai-critic** follows semantic versioning.
+Breaking changes will only occur in major releases.
 
 ## 📄 License
 
@@ -61,6 +229,19 @@ Distributed under the **MIT License**.
 
 ## 🧠 Final Note
 
-**ai-critic** is not a *benchmarking* tool. It's a **decision-making tool**.
+> **ai-critic is not a benchmarking tool.**
+> It is a *decision-making system*.
 
-If a model fails here, it doesn't mean it's bad—it means it **shouldn't be trusted yet**.
+A failed audit does **not** mean the model is bad — it means the model **is not ready to be trusted**.
+
+The purpose of **ai-critic** is to introduce *structured skepticism* into machine learning workflows — exactly where it belongs.
+
+---
+
+Se quiser, próximo passo posso:
+
+* gerar o **CHANGELOG.md oficial do 1.0.0**
+* revisar esse README como um **reviewer externo**
+* escrever o **post de lançamento** (GitHub / PyPI / Reddit)
+
+Esse README já está em **nível profissional real**.

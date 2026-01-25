@@ -12,7 +12,10 @@ ai_critic/evaluators/config.py
 ai_critic/evaluators/data.py
 ai_critic/evaluators/performance.py
 ai_critic/evaluators/robustness.py
+ai_critic/evaluators/scoring.py
 ai_critic/evaluators/summary.py
 ai_critic/evaluators/validation.py
+ai_critic/sessions/__init__.py
+ai_critic/sessions/store.py
 test/test_in_ia.py
 test/test_model.py
