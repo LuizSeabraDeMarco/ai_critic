@@ -2,7 +2,8 @@ from ai_critic.evaluators import (
     robustness,
     config,
     data,
-    performance
+    performance,
+    adapters  # <- novo import
 )
 from ai_critic.evaluators.summary import HumanSummary
 from ai_critic.sessions import CriticSessionStore
@@ -11,7 +12,7 @@ from ai_critic.evaluators.scoring import compute_scores
 
 class AICritic:
     """
-    Automated reviewer for scikit-learn models.
+    Automated reviewer for scikit-learn, PyTorch, or TensorFlow models.
 
     Produces a multi-layered risk assessment including:
     - Data integrity analysis
@@ -21,11 +22,12 @@ class AICritic:
     - Human-readable executive and technical summaries
     """
 
-    def __init__(self, model, X, y, random_state=None, session=None):
+    def __init__(self, model, X, y, random_state=None, session=None, framework="sklearn", adapter_kwargs=None):
         """
         Parameters
         ----------
-        model : sklearn-compatible estimator
+        model : object
+            scikit-learn estimator, torch.nn.Module, or tf.keras.Model
         X : np.ndarray
             Feature matrix
         y : np.ndarray
@@ -34,8 +36,18 @@ class AICritic:
             Global seed for reproducibility (optional)
         session : str or None
             Optional session name for longitudinal comparison
+        framework : str
+            "sklearn" (default), "torch", or "tensorflow"
+        adapter_kwargs : dict
+            Extra kwargs para o adaptador (ex: epochs, lr, batch_size)
         """
-        self.model = model
+        adapter_kwargs = adapter_kwargs or {}
+        self.framework = framework.lower()
+        if self.framework != "sklearn":
+            self.model = adapters.ModelAdapter(model, framework=self.framework, **adapter_kwargs)
+        else:
+            self.model = model
+
         self.X = X
         self.y = y
         self.random_state = random_state

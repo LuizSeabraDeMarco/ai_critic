@@ -1,6 +1,6 @@
 Metadata-Version: 2.4
 Name: ai-critic
-Version: 1.0.0
+Version: 1.1.0
 Summary: Fast AI evaluator for scikit-learn models
 Author-email: Luiz Seabra <filipedemarco@yahoo.com>
 Requires-Python: >=3.9
@@ -10,7 +10,7 @@ Requires-Dist: scikit-learn
 
 # ai-critic 🧠: The Quality Gate for Machine Learning Models
 
-**ai-critic** is a specialized **decision-making** tool designed to audit the reliability and readiness for deployment of scikit-learn–compatible Machine Learning models.
+**ai-critic** is a specialized **decision-making** tool designed to audit the reliability and readiness for deployment of **scikit-learn**, **PyTorch**, and **TensorFlow** models.
 
 Instead of merely measuring performance (accuracy, F1 score), **ai-critic** acts as a **Quality Gate**, actively probing the model to uncover *hidden risks* that commonly cause production failures — such as **data leakage**, **structural overfitting**, and **fragility under noise**.
 
@@ -19,11 +19,11 @@ Instead of merely measuring performance (accuracy, F1 score), **ai-critic** acts
 
 ---
 
-## 🚀  Getting Started (The Basics)
+## 🚀 Getting Started (The Basics)
 
 This section is ideal for beginners who need a **fast and reliable verdict** on a trained model.
 
-###  Installation
+### Installation
 
 Install directly from PyPI:
 
@@ -33,7 +33,7 @@ pip install ai-critic
 
 ---
 
-###  The Quick Verdict
+### The Quick Verdict
 
 With just a few lines of code, you obtain an **executive-level assessment** and a **deployment recommendation**.
 
@@ -70,13 +70,13 @@ If **ai-critic** recommends deployment, it means meaningful risks were *not* det
 
 ---
 
-## 💡  Understanding the Critique (The Intermediary)
+## 💡 Understanding the Critique (The Intermediary)
 
 For data scientists who want to understand **why** the model received a given verdict and **how to improve it**.
 
 ---
 
-###  The Four Pillars of the Audit
+### The Four Pillars of the Audit
 
 **ai-critic** evaluates models across four independent risk dimensions:
 
@@ -91,7 +91,7 @@ Each pillar contributes signals used later in the **deployment gate**.
 
 ---
 
-###  Full Technical & Visual Analysis
+### Full Technical & Visual Analysis
 
 To access **all internal diagnostics**, including plots and recommendations, use `view="all"`.
 
@@ -117,7 +117,7 @@ Generated plots may include:
 
 ---
 
-###  Robustness Test (Noise Injection)
+### Robustness Test (Noise Injection)
 
 A model that collapses under small perturbations is **not production-safe**.
 
@@ -139,13 +139,52 @@ print(f"Verdict: {robustness['verdict']}")
 
 ---
 
-## ⚙️  Integration and Governance (The Advanced)
+## ⚙️ Integration and Governance (The Advanced)
 
 This section targets **MLOps engineers**, **architects**, and teams operating automated pipelines.
 
 ---
 
-###  The Deployment Gate (`deploy_decision`)
+### Multi-Framework Support
+
+**ai-critic 1.0+** supports models from multiple frameworks with the **same API**:
+
+```python
+# PyTorch Example
+import torch
+import torch.nn as nn
+from ai_critic import AICritic
+
+X = torch.randn(1000, 20)
+y = torch.randint(0, 2, (1000,))
+
+model = nn.Sequential(
+    nn.Linear(20, 32),
+    nn.ReLU(),
+    nn.Linear(32, 2)
+)
+
+critic = AICritic(model, X, y, framework="torch", adapter_kwargs={"epochs":5, "batch_size":64})
+report = critic.evaluate(view="executive")
+print(report)
+
+# TensorFlow Example
+import tensorflow as tf
+
+model = tf.keras.Sequential([
+    tf.keras.layers.Dense(32, activation="relu", input_shape=(20,)),
+    tf.keras.layers.Dense(2)
+])
+critic = AICritic(model, X.numpy(), y.numpy(), framework="tensorflow", adapter_kwargs={"epochs":5})
+report = critic.evaluate(view="executive")
+print(report)
+```
+
+> No need to rewrite evaluation code — **one Critic API works for sklearn, PyTorch, or TensorFlow**.
+
+---
+
+### The Deployment Gate (`deploy_decision`)
 
 The `deploy_decision()` method aggregates *all detected risks* and produces a final gate decision.
 
@@ -173,7 +212,7 @@ for issue in decision["blocking_issues"]:
 
 ---
 
-###  Modes & Views (API Design)
+### Modes & Views (API Design)
 
 The `evaluate()` method supports **multiple modes** via the `view` parameter:
 
@@ -193,7 +232,7 @@ critic.evaluate(view=["executive", "performance"])
 
 ---
 
-###  Session Tracking & Model Comparison (New in 1.0.0)
+### Session Tracking & Model Comparison
 
 You can persist evaluations and compare model versions over time.
 
@@ -216,7 +255,7 @@ This enables:
 
 ---
 
-###  Best Practices & Use Cases
+### Best Practices & Use Cases
 
 | Scenario                | Recommended Usage                      |
 | ----------------------- | -------------------------------------- |
@@ -226,10 +265,13 @@ This enables:
 | **Stakeholder Reports** | Share executive summaries              |
 
 ---
+
 ## 🔒 API Stability
 
 Starting from version **1.0.0**, the public API of **ai-critic** follows semantic versioning.
 Breaking changes will only occur in major releases.
+
+---
 
 ## 📄 License
 
@@ -245,13 +287,3 @@ Distributed under the **MIT License**.
 A failed audit does **not** mean the model is bad — it means the model **is not ready to be trusted**.
 
 The purpose of **ai-critic** is to introduce *structured skepticism* into machine learning workflows — exactly where it belongs.
-
----
-
-Se quiser, próximo passo posso:
-
-* gerar o **CHANGELOG.md oficial do 1.0.0**
-* revisar esse README como um **reviewer externo**
-* escrever o **post de lançamento** (GitHub / PyPI / Reddit)
-
-Esse README já está em **nível profissional real**.
