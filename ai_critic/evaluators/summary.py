@@ -10,6 +10,10 @@ class HumanSummary:
         robustness_verdict = report["robustness"].get("verdict")
         structural_warnings = report["config"]["structural_warnings"]
 
+        explainability = report.get("explainability", {})
+        explain_verdict = explainability.get("verdict")
+        max_feature_drop = explainability.get("max_performance_drop", 0)
+
         # =========================
         # Executive summary
         # =========================
@@ -18,11 +22,19 @@ class HumanSummary:
             risk_level = "high"
             deploy = False
             main_reason = "Strong evidence of data leakage inflating model performance."
+        elif explain_verdict == "feature_leakage_risk":
+            verdict = "❌ Unreliable"
+            risk_level = "high"
+            deploy = False
+            main_reason = (
+                "Model behavior is dominated by a single feature, "
+                "suggesting shortcut learning or leakage."
+            )
         elif robustness_verdict in ("fragile", "misleading") or structural_warnings:
             verdict = "⚠️ Risky"
             risk_level = "medium"
             deploy = False
-            main_reason = "Structural or robustness-related risks detected."
+            main_reason = "Structural, robustness, or dependency-related risks detected."
         else:
             verdict = "✅ Acceptable"
             risk_level = "low"
@@ -71,6 +83,21 @@ class HumanSummary:
                 "Reduce model complexity or adjust hyperparameters."
             )
 
+        if explain_verdict == "feature_leakage_risk":
+            key_risks.append(
+                f"Single feature causes a {max_feature_drop:.2f} performance drop when permuted."
+            )
+            recommendations.append(
+                "Remove or heavily regularize the dominant feature and retrain."
+            )
+        elif explain_verdict == "feature_dependency":
+            key_risks.append(
+                "Model relies disproportionately on a small subset of features."
+            )
+            recommendations.append(
+                "Increase regularization or collect more diverse data."
+            )
+
         if robustness_verdict == "misleading":
             key_risks.append(
                 "Robustness metrics are misleading due to inflated baseline performance."
@@ -92,7 +119,8 @@ class HumanSummary:
                 "data_leakage": leakage,
                 "suspicious_cv": perfect_cv,
                 "structural_risk": bool(structural_warnings),
-                "robustness_verdict": robustness_verdict
+                "robustness_verdict": robustness_verdict,
+                "explainability_verdict": explain_verdict
             },
             "recommendations": recommendations
         }

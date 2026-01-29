@@ -11,6 +11,10 @@ def compute_scores(report: dict) -> dict:
     robustness = report["details"]["robustness"]["verdict"]
     structural = report["details"]["config"]["structural_warnings"]
 
+    explainability = report["details"].get("explainability", {})
+    explain_verdict = explainability.get("verdict")
+    max_feature_drop = explainability.get("max_performance_drop", 0)
+
     if data_leakage:
         score -= 30
 
@@ -25,6 +29,11 @@ def compute_scores(report: dict) -> dict:
     if structural:
         score -= 10
 
+    if explain_verdict == "feature_leakage_risk":
+        score -= 20
+    elif explain_verdict == "feature_dependency":
+        score -= 10
+
     return {
         "global": max(0, min(100, score)),
         "components": {
@@ -35,5 +44,10 @@ def compute_scores(report: dict) -> dict:
                 "fragile": 65,
                 "misleading": 40
             }.get(robustness, 100),
+            "explainability": (
+                40 if explain_verdict == "feature_leakage_risk"
+                else 70 if explain_verdict == "feature_dependency"
+                else 100
+            )
         }
     }

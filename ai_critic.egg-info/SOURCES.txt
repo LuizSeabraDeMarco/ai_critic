@@ -11,6 +11,7 @@ ai_critic/evaluators/__init__.py
 ai_critic/evaluators/adapters.py
 ai_critic/evaluators/config.py
 ai_critic/evaluators/data.py
+ai_critic/evaluators/explainability.py
 ai_critic/evaluators/performance.py
 ai_critic/evaluators/robustness.py
 ai_critic/evaluators/scoring.py

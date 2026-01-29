@@ -80,7 +80,106 @@ For data scientists who want to understand **why** the model received a given ve
 Each pillar contributes signals used later in the **deployment gate**.
 
 ---
+## 🔍 Explainability & Feature Sensitivity (New)
 
+Beyond detecting *that* a model is risky, **ai-critic** now analyzes **why** the model behaves the way it does.
+
+The **Explainability** module performs a **model-agnostic feature sensitivity analysis**, measuring how much performance drops when each feature is independently perturbed.
+
+This helps uncover:
+
+* Hidden **feature-level data leakage**
+* **Shortcut learning** (over-reliance on a single signal)
+* Excessive dependency on a small subset of features
+
+---
+
+### How It Works (Conceptually)
+
+For each feature:
+
+1. The feature values are randomly permuted.
+2. The model is re-evaluated using cross-validation.
+3. The performance drop is measured.
+
+A large drop indicates that the model **critically depends** on that feature.
+
+> This approach is lightweight, framework-agnostic, and does **not** require SHAP, LIME, or gradients.
+
+---
+
+### Explainability Verdicts
+
+The explainability analysis produces a dedicated verdict:
+
+| Verdict                | Meaning                                              |
+| ---------------------- | ---------------------------------------------------- |
+| `stable`               | No single feature dominates the model                |
+| `feature_dependency`   | Model relies strongly on a small set of features     |
+| `feature_leakage_risk` | One feature dominates performance (possible leakage) |
+
+These signals directly influence:
+
+* The **executive verdict**
+* The **human-readable recommendations**
+* The **global trust score**
+
+---
+
+### Accessing Explainability Results
+
+Explainability results are included automatically when using `view="all"` or `view="details"`.
+
+```python
+report = critic.evaluate(view="all")
+
+explainability = report["details"]["explainability"]
+
+print(f"Verdict: {explainability['verdict']}")
+print(f"Max Performance Drop: {explainability['max_performance_drop']:.2f}")
+
+print("\nTop Sensitive Features:")
+for feat in explainability["top_sensitive_features"]:
+    print(
+        f"Feature {feat['feature_index']} → "
+        f"Drop: {feat['performance_drop']:.2f}"
+    )
+```
+
+**Example output:**
+
+```text
+Verdict: feature_leakage_risk
+Max Performance Drop: 0.42
+
+Top Sensitive Features:
+Feature 3 → Drop: 0.42
+Feature 7 → Drop: 0.08
+Feature 12 → Drop: 0.03
+```
+
+---
+
+### How Explainability Affects the Decision Gate
+
+If a single feature causes a **large performance collapse** when perturbed:
+
+* The model may be flagged as **❌ Unreliable**
+* Deployment may be **automatically blocked**
+* The confidence score is penalized
+
+This ensures that models which *appear strong* but rely on **unsafe shortcuts** do not pass the quality gate.
+
+---
+
+### Why This Matters
+
+Many real-world failures occur not because models are inaccurate —
+but because they **learn the wrong reason**.
+
+By integrating explainability directly into the audit process, **ai-critic** ensures that:
+
+> **A model is not only performant — but behaviorally trustworthy.**
 ### Full Technical & Visual Analysis
 
 To access **all internal diagnostics**, including plots and recommendations, use `view="all"`.
@@ -277,3 +376,5 @@ Distributed under the **MIT License**.
 A failed audit does **not** mean the model is bad — it means the model **is not ready to be trusted**.
 
 The purpose of **ai-critic** is to introduce *structured skepticism* into machine learning workflows — exactly where it belongs.
+
+

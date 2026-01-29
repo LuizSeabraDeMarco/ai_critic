@@ -1,6 +1,6 @@
 Metadata-Version: 2.4
 Name: ai-critic
-Version: 1.1.0
+Version: 1.2.0
 Summary: Fast AI evaluator for scikit-learn models
 Author-email: Luiz Seabra <filipedemarco@yahoo.com>
 Requires-Python: >=3.9
@@ -90,6 +90,7 @@ For data scientists who want to understand **why** the model received a given ve
 Each pillar contributes signals used later in the **deployment gate**.
 
 ---
+
 
 ### Full Technical & Visual Analysis
 
