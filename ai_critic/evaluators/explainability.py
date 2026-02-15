@@ -1,64 +1,51 @@
-# explainability.py
 import numpy as np
 from sklearn.model_selection import cross_val_score
 from sklearn.base import clone
 
+from ai_critic.core.node import EvaluationNode
 from .validation import make_cv
 
 
-def evaluate(model, X, y, max_features=10):
-    """
-    Model-agnostic feature sensitivity analysis.
-    Measures how much performance drops when each feature is permuted.
-    """
+class ExplainabilityEvaluator(EvaluationNode):
 
-    cv = make_cv(y)
+    name = "explainability"
+    dependencies = ["performance"]
 
-    base_model = clone(model)
-    base_score = cross_val_score(base_model, X, y, cv=cv).mean()
+    def evaluate(self, context):
+        model = context["input"]["model"]
+        X = context["input"]["X"]
+        y = context["input"]["y"]
 
-    sensitivities = []
+        cv = make_cv(y)
 
-    for i in range(X.shape[1]):
-        X_permuted = X.copy()
-        np.random.shuffle(X_permuted[:, i])
+        base_score = cross_val_score(
+            clone(model), X, y, cv=cv
+        ).mean()
 
-        permuted_model = clone(model)
-        score = cross_val_score(permuted_model, X_permuted, y, cv=cv).mean()
+        max_drop = 0.0
 
-        drop = base_score - score
+        for i in range(X.shape[1]):
+            X_permuted = X.copy()
+            np.random.shuffle(X_permuted[:, i])
 
-        sensitivities.append({
-            "feature_index": int(i),
-            "performance_drop": float(drop)
-        })
+            score = cross_val_score(
+                clone(model), X_permuted, y, cv=cv
+            ).mean()
 
-    sensitivities.sort(
-        key=lambda x: x["performance_drop"],
-        reverse=True
-    )
+            drop = base_score - score
+            max_drop = max(max_drop, drop)
 
-    top = sensitivities[:max_features]
+        if max_drop > 0.30:
+            verdict = "feature_leakage_risk"
+        elif max_drop > 0.15:
+            verdict = "feature_dependency"
+        else:
+            verdict = "stable"
 
-    verdict = "stable"
-    message = "No single feature dominates model behavior."
+        explainability_score = max(0.0, 1 - max_drop)
 
-    if top and top[0]["performance_drop"] > 0.30:
-        verdict = "feature_leakage_risk"
-        message = (
-            "Model is highly sensitive to a single feature, "
-            "which may indicate leakage or shortcut learning."
-        )
-    elif top and top[0]["performance_drop"] > 0.15:
-        verdict = "feature_dependency"
-        message = (
-            "Model depends strongly on a small subset of features."
-        )
-
-    return {
-        "baseline_score": float(base_score),
-        "top_sensitive_features": top,
-        "max_performance_drop": float(top[0]["performance_drop"]) if top else 0.0,
-        "verdict": verdict,
-        "message": message
-    }
+        return {
+            "score": float(explainability_score),
+            "max_performance_drop": float(max_drop),
+            "verdict": verdict
+        }

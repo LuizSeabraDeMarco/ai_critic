@@ -10,6 +10,10 @@ ai_critic.egg-info/requires.txt
 ai_critic.egg-info/top_level.txt
 ai_critic/ai_suggestions/predictor.py
 ai_critic/ai_suggestions/rules.py
+ai_critic/core/aggregator.py
+ai_critic/core/graph.py
+ai_critic/core/node.py
+ai_critic/core/result.py
 ai_critic/evaluators/__init__.py
 ai_critic/evaluators/adapters.py
 ai_critic/evaluators/config.py

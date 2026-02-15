@@ -1,316 +1,348 @@
-# ai-critic 🧠
+# ai-critic 3.0.0
 
-## The Quality Gate for Machine Learning Models
+`pip install ai-critic`
 
-**ai-critic** is an **intelligent evaluation and decision system** designed to determine whether a machine learning model is **safe, reliable, and trustworthy enough** to be deployed in real-world environments.
+Latest version
+Released: 2026
 
-Unlike traditional ML evaluation tools that focus almost exclusively on *performance metrics*, **ai-critic acts as a Quality Gate** — a final checkpoint that actively probes models to uncover **hidden risks** that frequently cause silent failures in production.
-
-> **ai-critic does not ask *“How accurate is this model?”***
-> It asks ***“Can this model be trusted in the real world?”***
+AI Critic — Evaluation Graph Engine for ML models.
 
 ---
 
-## 🎯 Why ai-critic Exists
+## Navigation
 
-Most production ML failures are **not accuracy problems**.
-
-They are caused by:
-
-* Data leakage hidden inside features
-* Overfitting disguised as strong validation scores
-* Models that collapse under small noise
-* Fragile dependency on a single feature
-* Structurally unsafe configurations
-
-These failures usually appear **after deployment**, when they are already expensive — or dangerous — to fix.
-
-**ai-critic exists to detect these risks *before* deployment.**
+* Project description
+* Release history
+* Download files
 
 ---
 
-## 🚀 Installation
+## Verified details
 
-Install directly from PyPI:
+Maintainer
+Luiz Filipe Seabra de Marco
 
-```bash
-pip install ai-critic
+---
+
+## Unverified details
+
+**License:** MIT License (MIT)
+**Author:** Luiz Filipe Seabra de Marco
+**Tags:** machine learning, model evaluation, ml validation, robustness, explainability, cross validation, ai audit, ml scoring, evaluation engine
+**Requires:** Python >=3.8
+**Provides-Extra:** dev
+
+### Classifiers
+
+Development Status
+5 - Production/Stable
+
+Intended Audience
+Developers
+Science/Research
+
+License
+OSI Approved :: MIT License
+
+Operating System
+OS Independent
+
+Programming Language
+Python :: 3
+Python :: 3.8
+Python :: 3.9
+Python :: 3.10
+Python :: 3.11
+
+Topic
+Software Development :: Libraries
+Scientific/Engineering :: Artificial Intelligence
+
+---
+
+# Project description
+
+# AI Critic: The Evaluation Graph Engine for Machine Learning
+
+AI Critic is a modular, graph-based evaluation engine designed to analyze machine learning models in a structured, extensible, and deterministic way.
+
+Instead of providing isolated metrics, AI Critic executes an **Evaluation Graph** composed of independent evaluation nodes. Each node analyzes one dimension of model quality — such as performance, robustness, or explainability — and produces standardized outputs.
+
+The final result is an aggregated score with a clear verdict.
+
+In summary:
+
+You provide a model, data (X, y), and AI Critic executes a structured evaluation pipeline that produces:
+
+* Cross-validation diagnostics
+* Robustness under noise
+* Feature sensitivity analysis
+* Overall quality score
+* Clear deployment verdict
+
+No telemetry.
+No black-box ML meta-model.
+No overengineering.
+
+Just deterministic evaluation architecture.
+
+---
+
+# 🧠 Evaluation Graph Architecture
+
+AI Critic 3.0 introduces the Evaluation Graph Engine.
+
+Each evaluator is a node:
+
+* PerformanceEvaluator
+* RobustnessEvaluator
+* ExplainabilityEvaluator
+
+Nodes:
+
+* Are independent
+* Can declare dependencies
+* Produce standardized output
+* Return a normalized score
+
+The graph executes them sequentially and aggregates results.
+
+This architecture enables:
+
+* Future plugin system
+* Custom evaluation nodes
+* Parallel execution
+* Enterprise-level extensibility
+
+---
+
+# 🚀 Key Features
+
+### 📊 Cross-Validation Intelligence
+
+Automatically detects classification vs regression and selects the correct CV strategy.
+
+* StratifiedKFold for classification
+* KFold for regression
+* Detects suspiciously perfect scores
+* Reports validation strategy used
+
+---
+
+### 🛡 Robustness Under Noise
+
+Tests model stability by injecting controlled Gaussian noise.
+
+* Measures performance degradation
+* Classifies model as stable or fragile
+* Converts robustness drop into normalized score
+
+---
+
+### 🔍 Feature Sensitivity (Explainability Proxy)
+
+Model-agnostic permutation analysis:
+
+* Measures performance drop per feature
+* Detects shortcut learning
+* Flags potential leakage risk
+* Produces explainability score
+
+---
+
+### 🎯 Unified Scoring System
+
+All evaluators produce:
+
+```
+{
+  "score": float,
+  "verdict": str,
+  ...
+}
 ```
 
-Python **3.8+** is recommended.
+The ScoreAggregator computes:
+
+* Overall score (0–1)
+* Final verdict:
+
+  * excellent
+  * good
+  * moderate
+  * poor
 
 ---
 
-## ⚡ Quick Start (Fast Verdict)
+### 🧩 Modular Graph Engine
 
-If you want a **clear, conservative deployment recommendation**, this is all you need.
+The core engine allows:
+
+* Adding custom evaluation nodes
+* Replacing scoring strategies
+* Integrating into CI pipelines
+* Embedding inside ML platforms
+
+---
+
+# 💡 Quick Start
+
+## Basic Usage
 
 ```python
 from ai_critic import AICritic
 from sklearn.ensemble import RandomForestClassifier
-from sklearn.datasets import make_classification
+from sklearn.datasets import load_iris
 
-X, y = make_classification(
-    n_samples=1000,
-    n_features=20,
-    random_state=42
-)
+data = load_iris()
+X, y = data.data, data.target
 
-model = RandomForestClassifier(
-    max_depth=5,
-    random_state=42
-)
+model = RandomForestClassifier()
+model.fit(X, y)
 
-critic = AICritic(model, X, y)
+critic = AICritic()
+report = critic.evaluate(model, X, y)
 
-report = critic.evaluate(view="executive")
-
-print(report)
+print(report["scores"])
 ```
 
-### Example Output
+Output:
 
-```text
-Verdict: ⚠️ Risk Detected
-Risk Level: medium
-Deploy Recommended: False
-Main Reason: Structural or robustness risks detected
+```
+{
+  "overall": 0.87,
+  "verdict": "good"
+}
 ```
 
-> **If ai-critic approves deployment, it means no meaningful risks were detected by multiple independent checks.**
-
-The system is intentionally **skeptical by design**.
-
 ---
 
-## 🧭 What Does the Verdict Mean?
-
-| Field                | Meaning                     |
-| -------------------- | --------------------------- |
-| `verdict`            | Human-readable summary      |
-| `risk_level`         | low / medium / high         |
-| `deploy_recommended` | Final quality gate decision |
-| `main_reason`        | Primary blocking factor     |
-
-Clarity is prioritized over ambiguity.
-
----
-
-## 🧠 How ai-critic Thinks (Core Concept)
-
-**ai-critic is not a metric calculator.**
-It is a **decision system**.
-
-Internally, it works in three layers:
-
-1. **Evaluators** → Detect signals and risks
-2. **Critic Gate** → Decide if intervention is needed
-3. **Deployment Policy** → Decide if deployment is safe
-
----
-
-## 🧱 The Four Pillars of the Audit
-
-ai-critic evaluates models across **four independent risk dimensions**:
-
-| Pillar                | Detects                          | Why It Matters      |
-| --------------------- | -------------------------------- | ------------------- |
-| 📊 Data Integrity     | Leakage, shortcuts, correlations | Inflated metrics    |
-| 🧠 Model Structure    | Over-complexity, unsafe configs  | Poor generalization |
-| 📈 Performance Sanity | Suspicious CV behavior           | False confidence    |
-| 🧪 Robustness         | Noise sensitivity                | Production collapse |
-
-Each pillar emits **signals**, not binary judgments.
-
-Those signals are aggregated by the **Critic Gate**.
-
----
-
-## 🧪 Robustness Testing (Noise Injection)
-
-Production data is never clean.
-
-ai-critic injects controlled noise into inputs and measures degradation:
+# 📈 Detailed Output Structure
 
 ```python
-robustness = report["details"]["robustness"]
-
-print(robustness["performance_drop"])
-print(robustness["verdict"])
+{
+  "scores": {
+      "overall": 0.83,
+      "verdict": "good"
+  },
+  "details": {
+      "performance": {...},
+      "robustness": {...},
+      "explainability": {...}
+  }
+}
 ```
 
-Possible outcomes:
-
-* `stable` → acceptable degradation
-* `fragile` → high sensitivity
-* `misleading` → likely inflated performance
+Each evaluator returns structured diagnostic metadata.
 
 ---
 
-## 🔍 Explainability & Feature Sensitivity
+# 🖥 CLI Usage
 
-ai-critic performs **feature sensitivity analysis** to detect:
-
-* Feature-level leakage
-* Over-reliance on a single signal
-* Shortcut learning
-
-How it works:
-
-1. A feature is perturbed or permuted
-2. The model is re-evaluated
-3. Performance drop is measured
-
-Large drops indicate **critical dependency**.
-
-This approach is:
-
-* Model-agnostic
-* Lightweight
-* Interpretable
-* Framework-independent
-
----
-
-## 🧠 Recommendations Engine
-
-ai-critic does not stop at *“deploy or not”*.
-
-It generates **actionable recommendations**, such as:
-
-* Reduce model complexity
-* Increase regularization
-* Possible data leakage detected
-* High noise sensitivity
-* Structural overfitting signals
-
-These recommendations are **rule-based and data-driven**, not LLM hallucinations.
-
----
-
-## 🚦 Deployment Decision
-
-The final decision is produced via:
-
-```python
-decision = critic.deploy_decision()
-
-print(decision)
+```
+ai-critic --model model.pkl --data dataset.csv --target label
 ```
 
-Output includes:
+Output:
 
-* Deployment approval or rejection
-* Risk level
-* ML confidence score
-* Blocking issues
-* Recommendations
+```
+=== AI CRITIC REPORT ===
 
----
-
-## 🧠 Critic Gate (New)
-
-The **Critic Gate** decides **whether suggestions should even be made**.
-
-This prevents:
-
-* Over-criticism
-* Noise-based warnings
-* Fatigue from excessive suggestions
-
-The gate considers:
-
-* Overall score
-* Dataset size
-* Verdict severity
-* Structural risk
-
-This turns ai-critic into a **judgment system**, not a nagging tool.
-
----
-
-## 🔄 Feedback Loop & Learning Critic
-
-ai-critic can learn from outcomes.
-
-You can optionally provide feedback:
-
-```bash
-ai-critic --feedback success
+Overall score: 0.812
+Verdict: good
 ```
 
-This enables:
+JSON mode:
 
-* Smarter future decisions
-* Better thresholds
-* Context-aware criticism
-
-The critic improves without exposing your data.
-
----
-
-## 🖥️ Command Line Interface (CLI)
-
-ai-critic ships with a professional CLI:
-
-```bash
-ai-critic \
-  --model model.pkl \
-  --data dataset.csv \
-  --target label
+```
+ai-critic --model model.pkl --data dataset.csv --target label --json
 ```
 
-CLI output includes:
+---
 
-* Gate decision
-* Deployment recommendation
-* Risk level
-* Suggestions
+# 🧪 Evaluation Dimensions
 
-Use `--json` for automation and pipelines.
+## 1️⃣ Performance
+
+* Cross-validation mean score
+* Standard deviation
+* Suspiciously perfect detection
+
+## 2️⃣ Robustness
+
+* Noise injection test
+* Performance drop calculation
+* Stability classification
+
+## 3️⃣ Explainability
+
+* Feature permutation sensitivity
+* Shortcut detection
+* Leakage risk signal
 
 ---
 
-## 🧩 Multi-Framework Support
+# ⚙️ Installation
 
-Supported via adapters:
+```
+pip install ai-critic
+```
+
+Dependencies:
 
 * scikit-learn
-* PyTorch
-* TensorFlow
-
-The API remains consistent.
+* numpy
+* matplotlib (optional for visualization)
 
 ---
 
-## 🛡️ What ai-critic Is NOT
+# 🏗 Extending AI Critic
 
-* ❌ A hyperparameter optimizer
-* ❌ A leaderboard benchmarking tool
-* ❌ A replacement for domain expertise
-* ❌ A blind approval system
+You can create custom nodes:
+
+```python
+from ai_critic.core.node import EvaluationNode
+
+class FairnessEvaluator(EvaluationNode):
+
+    name = "fairness"
+    dependencies = []
+
+    def evaluate(self, context):
+        return {
+            "score": 0.9,
+            "verdict": "acceptable"
+        }
+```
+
+Then inject into the graph:
+
+```python
+critic.graph = EvaluationGraph([
+    PerformanceEvaluator(),
+    RobustnessEvaluator(),
+    ExplainabilityEvaluator(),
+    FairnessEvaluator()
+])
+```
 
 ---
 
-## 🧠 Design Philosophy
+# 🎯 Design Philosophy
 
-ai-critic assumes:
+AI Critic is built on three principles:
 
-* Metrics can lie
-* Data is imperfect
-* Models fail silently
-* Trust must be earned
+1. Deterministic evaluation
+2. Structural modularity
+3. No hidden learning layer
 
-That makes it ideal as a **final quality gate**, not a tuning toy.
+It is not an AutoML system.
+It is not a model trainer.
+
+It is an evaluation engine.
 
 ---
 
-## 🧠 Final Note
+# 📄 License
 
-> **ai-critic is not here to make models look good.**
-> It exists to **prevent unsafe models from looking good enough to deploy**.
-
-A failed audit does **not** mean your model is bad.
-It means your model is **not yet safe to trust**.
-
-That distinction is everything.
+Distributed under the MIT License. See LICENSE for more information.

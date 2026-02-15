@@ -1,59 +1,47 @@
 import numpy as np
 from sklearn.base import clone
 from sklearn.model_selection import cross_val_score
-import matplotlib.pyplot as plt
 
-def evaluate(model, X, y, leakage_suspected=False, plot=False):
-    noise_level = 0.02  # 2% relative noise
-    scale = np.std(X)
-    noise = np.random.normal(0, noise_level * scale, X.shape)
-    X_noisy = X + noise
+from ai_critic.core.node import EvaluationNode
+from .validation import make_cv
 
-    model_clean = clone(model)
-    model_noisy = clone(model)
 
-    from .validation import make_cv
+class RobustnessEvaluator(EvaluationNode):
 
-    cv = make_cv(y)
+    name = "robustness"
+    dependencies = ["performance"]
 
-    score_clean = cross_val_score(model_clean, X, y, cv=cv, n_jobs=1).mean()
-    score_noisy = cross_val_score(model_noisy, X_noisy, y, cv=cv, n_jobs=1).mean()
+    def evaluate(self, context):
+        model = context["input"]["model"]
+        X = context["input"]["X"]
+        y = context["input"]["y"]
 
-    drop = score_clean - score_noisy
+        noise_level = 0.02
+        scale = np.std(X)
+        noise = np.random.normal(0, noise_level * scale, X.shape)
+        X_noisy = X + noise
 
-    # =========================
-    # Verdict
-    # =========================
-    if leakage_suspected and score_clean > 0.98:
-        verdict = "misleading"
-        message = (
-            "Model appears robust to noise, but original performance is "
-            "likely inflated due to data leakage."
-        )
-    elif drop > 0.15:
-        verdict = "fragile"
-        message = "Model performance degrades significantly under noise."
-    else:
-        verdict = "stable"
-        message = "Model shows acceptable robustness to noise."
+        cv = make_cv(y)
 
-    # =========================
-    # Plot CV Clean vs Noisy
-    # =========================
-    if plot:
-        plt.figure(figsize=(4,4))
-        plt.bar(["Original", "Com Ruído"], [score_clean, score_noisy], color=['green','red'])
-        plt.ylabel("CV Score")
-        plt.title("Robustez do Modelo")
-        plt.ylim(0, 1)
-        plt.tight_layout()
-        plt.savefig("robustness.png", dpi=150)  # Salva automaticamente
-        plt.show()
+        score_clean = cross_val_score(
+            clone(model), X, y, cv=cv
+        ).mean()
 
-    return {
-        "cv_score_original": float(score_clean),
-        "cv_score_noisy": float(score_noisy),
-        "performance_drop": float(drop),
-        "verdict": verdict,
-        "message": message
-    }
+        score_noisy = cross_val_score(
+            clone(model), X_noisy, y, cv=cv
+        ).mean()
+
+        drop = score_clean - score_noisy
+
+        if drop > 0.15:
+            verdict = "fragile"
+        else:
+            verdict = "stable"
+
+        robustness_score = max(0.0, 1 - drop)
+
+        return {
+            "score": float(robustness_score),
+            "performance_drop": float(drop),
+            "verdict": verdict
+        }
