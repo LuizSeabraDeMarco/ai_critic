@@ -1,19 +1,26 @@
 [build-system]
-requires = ["setuptools>=61.0"]
+requires = ["setuptools>=77", "wheel"]
 build-backend = "setuptools.build_meta"
 
 [project]
 name = "ai-critic"
-version = "3.0.0"
-description = "Fast AI evaluator for scikit-learn models"
+version = "3.2.0"
+description = "Graph-based evaluation engine for machine learning models"
 readme = "README.md"
+requires-python = ">=3.8"
+license = "MIT"
+
 authors = [
-    { name="Luiz Seabra", email="filipedemarco@yahoo.com" }
+    { name = "Luiz Filipe Seabra" }
 ]
-license = { file = "LICENSE" }
-requires-python = ">=3.9"
 
 dependencies = [
     "numpy",
     "scikit-learn"
 ]
+
+dynamic = []
+
+[tool.setuptools.packages.find]
+where = ["."]
+include = ["ai_critic*"]
