@@ -1,6 +1,6 @@
 Metadata-Version: 2.4
 Name: ai-critic
-Version: 3.2.0
+Version: 3.3.0
 Summary: Graph-based evaluation engine for machine learning models
 Author: Luiz Filipe Seabra
 License-Expression: MIT
@@ -9,327 +9,93 @@ Description-Content-Type: text/markdown
 Requires-Dist: numpy
 Requires-Dist: scikit-learn
 
-# ai-critic 3.2.0
+# AI Critic 4.0.0 (Enhanced Edition)
 
 `pip install ai-critic`
 
-Latest version  
-Released: 2026
-
-AI Critic — Evaluation Graph Engine for Machine Learning.
-
----
-
-# AI Critic
-
 AI Critic is a **graph-based evaluation engine for machine learning models**.
 
-Instead of isolated metrics, AI Critic runs a structured **evaluation pipeline** that analyzes multiple dimensions of model quality such as:
+Instead of isolated metrics, AI Critic runs a structured **evaluation pipeline** that analyzes multiple dimensions of model quality.
 
-- performance
-- robustness
-- explainability
-- dataset risks
-- overfitting signals
-
-The system produces **structured diagnostics and a unified score**.
-
-AI Critic is designed to be:
-
-- deterministic
-- extensible
-- plugin-driven
-- CI friendly
-
-No telemetry.  
-No AutoML.  
-Just structured model evaluation.
-
----
-# Why AI Critic?
-
-Typical ML evaluation focuses only on metrics like accuracy.
-
-But real-world models fail for many reasons:
-
-- data leakage
-- class imbalance
-- unstable features
-- fragile robustness
-
-AI Critic evaluates these risks in a structured pipeline.
-
-# Key Features
-
-## Model Audit
-
-Run a full diagnostic of your model and dataset.
-
-```python
-from ai_critic.audit import audit
-
-report = audit(model, X, y)
-````
-
-Audit detects:
-
-* dataset size issues
-* class imbalance
-* potential overfitting
-* suspiciously perfect validation scores
-
-Example output:
-
-```python
-{
-  "dataset_checks": {...},
-  "model_checks": {...},
-  "scores": {...}
-}
-```
+## New in Version 4.0
+- **Unified Core Architecture**: Streamlined `EvaluationNode` and `EvaluatorPlugin` for easier extension.
+- **Advanced Graph Engine**: Real topological sorting of dependencies.
+- **Parallel Execution**: Run independent evaluators in parallel for faster results.
+- **Weighted Aggregation**: Control the importance of each evaluator in the final score.
+- **Structured Reporting**: New `EvaluationReport` object with JSON, Dict, and Text summary support.
+- **Smart Suggestion Engine**: Prioritized actionable advice based on evaluation results.
 
 ---
 
-## Benchmark Multiple Models
-
-Compare several models on the same dataset.
-
-```python
-from ai_critic.benchmark import benchmark
-
-results = benchmark(
-    models=[model1, model2, model3],
-    X=X,
-    y=y
-)
-```
-
-Output:
-
-```
-RandomForestClassifier   score: 0.91
-SVC                      score: 0.87
-LogisticRegression       score: 0.82
-```
-
----
-
-## Evaluation Graph Engine
-
-AI Critic executes evaluations using a structured **Evaluation Graph**.
-
-Each evaluator is a node:
-
-* PerformanceEvaluator
-* RobustnessEvaluator
-* ExplainabilityEvaluator
-
-Nodes:
-
-* run independently
-* produce structured output
-* return normalized scores
-* can declare dependencies
-
-The graph aggregates them into a final score.
-
----
-
-## Graph Visualization
-
-Visualize the evaluation pipeline.
-
-```python
-critic.visualize()
-```
-
-Generates a graph representation of the evaluation pipeline.
-
-Example structure:
-
-```
-performance
-   ↓
-robustness
-   ↓
-explainability
-```
-
----
-
-## Cross-Validation Intelligence
-
-Automatically selects validation strategy:
-
-* StratifiedKFold for classification
-* KFold for regression
-
-Reports:
-
-* CV mean score
-* standard deviation
-* suspiciously perfect scores
-
----
-
-## Robustness Testing
-
-Tests model stability under controlled noise injection.
-
-Reports:
-
-* performance degradation
-* stability classification
-* robustness score
-
----
-
-## Explainability Signal
-
-Uses permutation sensitivity analysis to estimate feature importance behavior.
-
-Detects:
-
-* shortcut learning
-* unstable features
-* potential leakage signals
-
----
-
-# Quick Start
+## Quick Start
 
 ```python
 from ai_critic import AICritic
 from sklearn.ensemble import RandomForestClassifier
 from sklearn.datasets import load_iris
 
+# Load data and train model
 data = load_iris()
 X, y = data.data, data.target
+model = RandomForestClassifier().fit(X, y)
 
-model = RandomForestClassifier()
-model.fit(X, y)
+# Initialize with custom weights
+weights = {"performance": 1.0, "robustness": 1.5}
+critic = AICritic(weights=weights)
 
-critic = AICritic()
+# Evaluate (supports parallel execution)
+report = critic.evaluate(model, X, y, parallel=True)
 
-report = critic.evaluate(model, X, y)
+# Print summary
+print(report.summary())
 
-print(report["scores"])
-```
-
-Output:
-
-```
-{
-  "overall": 0.87,
-  "verdict": "good"
-}
+# Get AI suggestions
+from ai_critic.ai_suggestions.rules import SuggestionEngine
+suggestions = SuggestionEngine.suggest(report)
+for s in suggestions:
+    print(f"[{s['priority']}] {s['category']}: {s['message']}")
 ```
 
 ---
 
-# Output Structure
+## Core Components
 
-```python
-{
-  "scores": {
-      "overall": 0.83,
-      "verdict": "good"
-  },
-  "details": {
-      "performance": {...},
-      "robustness": {...},
-      "explainability": {...}
-  }
-}
-```
+### 1. Evaluation Graph
+The engine automatically resolves dependencies between evaluators. For example, `Robustness` depends on `Performance`.
 
-Each evaluator returns diagnostic metadata.
+### 2. Weighted Aggregator
+Individual scores are combined using a weighted average. You can define weights during `AICritic` initialization.
 
----
-
-# Plugin System
-
-AI Critic 3.0 introduces a **plugin architecture**.
-
-You can create custom evaluators.
-
-Example:
+### 3. Evaluator Plugins
+Creating custom evaluators is simple:
 
 ```python
 from ai_critic.plugins.base import EvaluatorPlugin
-
-class FairnessEvaluator(EvaluatorPlugin):
-
-    name = "fairness"
-
-    def evaluate(self, model, dataset, context):
-        return {
-            "score": 0.9,
-            "message": "Model fairness acceptable"
-        }
-```
-
-Register the plugin:
-
-```python
 from ai_critic.plugins.registry import EvaluatorRegistry
 
+class FairnessEvaluator(EvaluatorPlugin):
+    name = "fairness"
+    weight = 1.0
+    dependencies = ["performance"]
+
+    def evaluate(self, model, dataset, context=None):
+        # Your logic here
+        return {"score": 0.95, "message": "Fairness is high."}
+
+# Register the plugin
 EvaluatorRegistry.register(FairnessEvaluator())
 ```
 
-AI Critic will automatically include it in the evaluation pipeline.
-
 ---
 
-# CLI Usage
-
-```
-ai-critic --model model.pkl --data dataset.csv --target label
-```
-
-Output:
-
-```
-=== AI CRITIC REPORT ===
-
-Overall score: 0.812
-Verdict: good
-```
-
-JSON mode:
-
-```
-ai-critic --json
+## CLI Usage
+```bash
+ai-critic --model model.pkl --data dataset.csv --target label --parallel
 ```
 
 ---
 
-# Installation
-
-```
-pip install ai-critic
-```
-
-Dependencies:
-
-* numpy
-* scikit-learn
-* graphviz (optional for visualization)
-
----
-
-# Design Philosophy
-
-AI Critic follows three principles:
-
-1. Deterministic evaluation
-2. Modular architecture
-3. No hidden ML layers
-
-AI Critic is not:
-
-* an AutoML tool
-* a model trainer
-* a black box evaluator
-
-It is an **evaluation engine**.
+## Design Philosophy
+1. **Deterministic evaluation**
+2. **Modular & Parallel architecture**
+3. **Transparent & Actionable diagnostics**
