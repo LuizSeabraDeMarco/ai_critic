@@ -4,22 +4,37 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "ai-critic"
-version = "3.3.0"
+version = "3.4.5"
 description = "Graph-based evaluation engine for machine learning models"
 readme = "README.md"
 requires-python = ">=3.8"
-license = "MIT"
+license = { text = "MIT" }
 
 authors = [
     { name = "Luiz Filipe Seabra" }
 ]
 
 dependencies = [
-    "numpy",
-    "scikit-learn"
+    "numpy>=1.23,<2.3",
+    "scikit-learn>=1.0,<2.0"
 ]
 
-dynamic = []
+# extras (muito importante pra escalar depois)
+[project.optional-dependencies]
+dev = [
+    "pytest",
+    "black",
+    "ruff"
+]
+
+viz = [
+    "graphviz"
+]
+
+full = [
+    "graphviz",
+    "pandas"
+]
 
 [tool.setuptools.packages.find]
 where = ["."]

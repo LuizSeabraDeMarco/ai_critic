@@ -1,73 +1,191 @@
 Metadata-Version: 2.4
 Name: ai-critic
-Version: 3.3.0
+Version: 3.4.5
 Summary: Graph-based evaluation engine for machine learning models
 Author: Luiz Filipe Seabra
-License-Expression: MIT
+License: MIT
 Requires-Python: >=3.8
 Description-Content-Type: text/markdown
-Requires-Dist: numpy
-Requires-Dist: scikit-learn
+Requires-Dist: numpy<2.3,>=1.23
+Requires-Dist: scikit-learn<2.0,>=1.0
+Provides-Extra: dev
+Requires-Dist: pytest; extra == "dev"
+Requires-Dist: black; extra == "dev"
+Requires-Dist: ruff; extra == "dev"
+Provides-Extra: viz
+Requires-Dist: graphviz; extra == "viz"
+Provides-Extra: full
+Requires-Dist: graphviz; extra == "full"
+Requires-Dist: pandas; extra == "full"
 
-# AI Critic 4.0.0 (Enhanced Edition)
+# 🚀 AI Critic 3.4.5 (Unified Evaluation Engine)
 
-`pip install ai-critic`
+```bash
+pip install ai-critic
+```
 
-AI Critic is a **graph-based evaluation engine for machine learning models**.
+**AI Critic** is a **graph-based evaluation engine for machine learning models**, designed to go beyond isolated metrics.
 
-Instead of isolated metrics, AI Critic runs a structured **evaluation pipeline** that analyzes multiple dimensions of model quality.
-
-## New in Version 4.0
-- **Unified Core Architecture**: Streamlined `EvaluationNode` and `EvaluatorPlugin` for easier extension.
-- **Advanced Graph Engine**: Real topological sorting of dependencies.
-- **Parallel Execution**: Run independent evaluators in parallel for faster results.
-- **Weighted Aggregation**: Control the importance of each evaluator in the final score.
-- **Structured Reporting**: New `EvaluationReport` object with JSON, Dict, and Text summary support.
-- **Smart Suggestion Engine**: Prioritized actionable advice based on evaluation results.
+It runs a **structured evaluation pipeline** that analyzes multiple dimensions — performance, robustness, explainability, data quality, and structure — delivering a **unified, interpretable, and actionable report**.
 
 ---
 
-## Quick Start
+# 🔥 WHAT’S NEW IN 3.4.5
+
+### 🧠 Fully Unified Architecture
+
+* Single entry point: `evaluate()`
+* Single output format: `report`
+* Removal of fragmented and inconsistent outputs
+
+---
+
+### 📦 Standardized Report (JSON-first)
+
+All results follow the same schema:
+
+```python
+report = {
+    "scores": {},        # technical scores (0–1)
+    "details": {},       # raw evaluator outputs
+    "risk": {},          # interpretable score (0–100)
+    "summary": {},       # human-readable insights
+    "suggestions": []    # recommended actions
+}
+```
+
+👉 This makes AI Critic:
+
+* API-ready
+* Easy to log and persist
+* Production-ready
+
+---
+
+### ⚡ Improved Graph Engine
+
+* Dependency-aware execution (topological sort)
+* Parallel execution support
+* Deterministic evaluation order
+
+---
+
+### 🎯 Multi-layer Scoring System
+
+* **Technical score (0–1)** → aggregation layer
+* **Risk score (0–100)** → decision layer
+
+---
+
+### 💡 Integrated Suggestion Engine
+
+* Automatically generates recommendations based on model behavior
+
+---
+
+### 🧩 Plugin System Stabilization
+
+* Cleaner evaluator interface
+* Improved dependency resolution
+* Easier extension of the evaluation pipeline
+
+---
+
+# ⚡ QUICK START
 
 ```python
 from ai_critic import AICritic
 from sklearn.ensemble import RandomForestClassifier
 from sklearn.datasets import load_iris
 
-# Load data and train model
+# Data
 data = load_iris()
 X, y = data.data, data.target
+
+# Model
 model = RandomForestClassifier().fit(X, y)
 
-# Initialize with custom weights
-weights = {"performance": 1.0, "robustness": 1.5}
-critic = AICritic(weights=weights)
+# Critic
+critic = AICritic(weights={
+    "performance": 1.0,
+    "robustness": 1.5
+})
 
-# Evaluate (supports parallel execution)
+# Evaluation
 report = critic.evaluate(model, X, y, parallel=True)
 
-# Print summary
-print(report.summary())
+# 🔹 Technical scores
+print(report["scores"])
 
-# Get AI suggestions
-from ai_critic.ai_suggestions.rules import SuggestionEngine
-suggestions = SuggestionEngine.suggest(report)
-for s in suggestions:
-    print(f"[{s['priority']}] {s['category']}: {s['message']}")
+# 🔹 Risk score (0–100)
+print(report["risk"])
+
+# 🔹 Human summary
+print(report["summary"])
+
+# 🔹 Suggestions
+for s in report["suggestions"]:
+    print("-", s)
 ```
 
 ---
 
-## Core Components
+# 🧩 INTERNAL PIPELINE
 
-### 1. Evaluation Graph
-The engine automatically resolves dependencies between evaluators. For example, `Robustness` depends on `Performance`.
+```text
+evaluate()
+   ↓
+EvaluationGraph (nodes)
+   ↓
+raw_results
+   ↓
+ScoreAggregator (0–1)
+   ↓
+build_report()
+   ↓
+scoring.py (risk 0–100)
+   ↓
+summary.py (human-readable)
+   ↓
+SuggestionEngine
+```
 
-### 2. Weighted Aggregator
-Individual scores are combined using a weighted average. You can define weights during `AICritic` initialization.
+---
 
-### 3. Evaluator Plugins
-Creating custom evaluators is simple:
+# 🧱 CORE COMPONENTS
+
+## 1. Evaluation Graph
+
+A DAG-based execution system:
+
+* Automatically resolves dependencies
+* Executes nodes in correct order
+* Enables parallel execution
+
+Example:
+
+```
+performance → robustness → explainability
+```
+
+---
+
+## 2. Score Aggregator
+
+Combines evaluator outputs:
+
+```python
+critic = AICritic(weights={
+    "performance": 1.0,
+    "robustness": 2.0
+})
+```
+
+---
+
+## 3. Evaluator Plugins
+
+Fully extensible via plugins:
 
 ```python
 from ai_critic.plugins.base import EvaluatorPlugin
@@ -75,27 +193,133 @@ from ai_critic.plugins.registry import EvaluatorRegistry
 
 class FairnessEvaluator(EvaluatorPlugin):
     name = "fairness"
-    weight = 1.0
     dependencies = ["performance"]
+    weight = 1.0
 
     def evaluate(self, model, dataset, context=None):
-        # Your logic here
-        return {"score": 0.95, "message": "Fairness is high."}
+        return {
+            "score": 0.92,
+            "verdict": "stable",
+            "message": "Fairness is acceptable"
+        }
 
-# Register the plugin
 EvaluatorRegistry.register(FairnessEvaluator())
 ```
 
 ---
 
-## CLI Usage
-```bash
-ai-critic --model model.pkl --data dataset.csv --target label --parallel
+## 4. Risk Scoring (0–100)
+
+Transforms technical signals into decision-ready output:
+
+```python
+report["risk"] = {
+    "global_score": 78.5,
+    "verdict": "usable_with_caution",
+    "component_scores": {...},
+    "penalties": [...]
+}
 ```
 
 ---
 
-## Design Philosophy
-1. **Deterministic evaluation**
-2. **Modular & Parallel architecture**
-3. **Transparent & Actionable diagnostics**
+## 5. Human Summary
+
+High-level interpretation:
+
+```python
+report["summary"] = {
+    "executive_summary": {
+        "verdict": "⚠️ Risky",
+        "deploy_recommended": False
+    }
+}
+```
+
+---
+
+## 6. Suggestion Engine
+
+Actionable insights:
+
+```python
+[
+    "Check for data leakage",
+    "Improve robustness with regularization"
+]
+```
+
+---
+
+# 🖥️ CLI
+
+```bash
+ai-critic --model model.pkl --data dataset.csv --target label
+```
+
+Output includes:
+
+* scores
+* risk analysis
+* summary
+
+---
+
+# 🧠 DESIGN PHILOSOPHY
+
+### 1. Single Source of Truth
+
+One unified data format → no inconsistencies
+
+---
+
+### 2. Graph-first Thinking
+
+Evaluation is a dependency-driven pipeline, not isolated functions
+
+---
+
+### 3. JSON-native
+
+Everything is ready for:
+
+* APIs
+* dashboards
+* logging
+* SaaS platforms
+
+---
+
+### 4. Actionable AI
+
+Not just metrics — decisions:
+
+* Should you deploy?
+* Where is the risk?
+* What should be improved?
+
+---
+
+# 🔥 POSITIONING
+
+AI Critic is not just a metrics library.
+
+It is a:
+
+> 🧠 **Linting engine for machine learning models**
+
+---
+
+# 🚀 ROADMAP
+
+* REST API (`/evaluate`)
+* Visual dashboard
+* Model telemetry
+* Continuous learning (feedback loop)
+* Global benchmarking between models
+
+---
+
+# 📄 LICENSE
+
+MIT License

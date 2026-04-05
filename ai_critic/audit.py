@@ -60,10 +60,12 @@ def audit(model, X, y) -> Dict[str, Any]:
     """
     Run a full AI audit combining evaluation pipeline and dataset checks.
     """
+
     critic = AICritic()
     report = critic.evaluate(model, X, y)
 
-    performance = report.details.get("performance", {})
+    # 🔥 AGORA CORRETO (dict)
+    performance = report.get("details", {}).get("performance", {})
 
     dataset_checks = {
         "size": _detect_dataset_size(X),
@@ -75,12 +77,11 @@ def audit(model, X, y) -> Dict[str, Any]:
         "data_leakage": _detect_possible_leakage(performance)
     }
 
-    # Combine all into a comprehensive audit result
     return {
-        "report": report.to_dict(),
+        "report": report,  # já é dict
         "audit_checks": {
             "dataset": dataset_checks,
             "model": model_checks
         },
-        "summary": report.summary()
+        "summary": report.get("summary", {})
     }

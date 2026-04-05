@@ -1,2 +1,14 @@
-numpy
-scikit-learn
+numpy<2.3,>=1.23
+scikit-learn<2.0,>=1.0
+
+[dev]
+pytest
+black
+ruff
+
+[full]
+graphviz
+pandas
+
+[viz]
+graphviz

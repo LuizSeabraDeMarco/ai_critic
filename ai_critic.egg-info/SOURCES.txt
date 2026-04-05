@@ -10,12 +10,11 @@ ai_critic.egg-info/SOURCES.txt
 ai_critic.egg-info/dependency_links.txt
 ai_critic.egg-info/requires.txt
 ai_critic.egg-info/top_level.txt
-ai_critic/ai_suggestions/predictor.py
 ai_critic/ai_suggestions/rules.py
 ai_critic/core/aggregator.py
 ai_critic/core/graph.py
 ai_critic/core/node.py
-ai_critic/core/result.py
+ai_critic/core/schema.py
 ai_critic/evaluators/__init__.py
 ai_critic/evaluators/adapters.py
 ai_critic/evaluators/config.py
@@ -29,13 +28,7 @@ ai_critic/evaluators/validation.py
 ai_critic/feedback/__init__.py
 ai_critic/feedback/store.py
 ai_critic/learning/__init__.py
-ai_critic/learning/critic_gate.py
 ai_critic/learning/critic_model.py
-ai_critic/learning/features.py
-ai_critic/learning/policy.py
-ai_critic/learning/recommender.py
-ai_critic/learning/trainer.py
-ai_critic/ml/suggester.py
 ai_critic/plugins/base.py
 ai_critic/plugins/registry.py
 ai_critic/sessions/__init__.py
