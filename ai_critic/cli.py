@@ -8,16 +8,18 @@ from api.client import AICritic
 def build_parser():
     parser = argparse.ArgumentParser(
         prog="ai-critic",
-        description="AI Critic — Evaluation Pipeline"
+        description="AI Critic — Production Readiness Check"
     )
 
     parser.add_argument("--model", required=True, help="Path to model (.pkl/.joblib)")
     parser.add_argument("--data", required=True, help="Path to dataset (.csv or .npz)")
     parser.add_argument("--target", required=True, help="Target column name")
-    
-    parser.add_argument("--json", action="store_true", help="Output in JSON format")
-    parser.add_argument("--limit", type=int, help="Limit number of samples (debug)")
-    
+
+    parser.add_argument("--json", action="store_true", help="Output JSON")
+    parser.add_argument("--limit", type=int, help="Limit number of samples")
+    parser.add_argument("--threshold", type=float, default=70.0, help="Minimum risk score to pass")
+    parser.add_argument("--fail-on-risk", action="store_true", help="Fail if risk < threshold")
+
     return parser
 
 
@@ -48,34 +50,53 @@ def main():
     try:
         import joblib
 
-        # 📦 carregar modelo
+        # 📦 Load model
         model = joblib.load(args.model)
 
-        # 📊 carregar dados
+        # 📊 Load data
         X, y = load_data(args.data, args.target, args.limit)
 
-        # 🤖 gerar previsões
+        # 🤖 Predictions
         predictions = model.predict(X)
 
-        # 🧠 rodar critic
+        # 🧠 Run critic
         critic = AICritic()
         report = critic.evaluate(
             input_data=y,
             model_output=predictions
         )
 
-        # 📤 saída
+        # 🔥 Normalize output (NEW STANDARD FORMAT)
+        risk_score = report.get("risk", {}).get("global_score", None)
+        verdict = report.get("risk", {}).get("verdict", "unknown")
+
+        output = {
+            "risk_score": risk_score,
+            "verdict": verdict,
+            "details": report.get("details", {}),
+            "summary": report.get("summary", {})
+        }
+
+        # 📤 Output
         if args.json:
-            print(json.dumps(report, indent=2, default=str))
+            print(json.dumps(output, indent=2, default=str))
         else:
             print("\n=== AI CRITIC REPORT ===\n")
-            print(f"Final Score: {report['final_score']:.4f}\n")
+            print(f"Risk Score: {risk_score}")
+            print(f"Verdict: {verdict}\n")
 
-            for r in report["details"]:
-                print(f"[{r.name}]")
-                print(f"  Score: {r.score:.4f}")
-                print(f"  Confidence: {r.confidence:.2f}")
-                print(f"  → {r.explanation}\n")
+            if "summary" in output:
+                for k, v in output["summary"].items():
+                    print(f"{k}: {v}")
+
+        # 🚫 QUALITY GATE (CRUCIAL PRA VIRAR PADRÃO)
+        if args.fail_on_risk:
+            if risk_score is not None and risk_score < args.threshold:
+                print(
+                    f"\n[ai-critic] ❌ Model rejected (risk {risk_score} < {args.threshold})",
+                    file=sys.stderr
+                )
+                sys.exit(2)
 
     except Exception as e:
         print(f"[ai-critic] Error: {e}", file=sys.stderr)

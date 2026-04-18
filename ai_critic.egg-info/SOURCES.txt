@@ -2,9 +2,12 @@ README.md
 pyproject.toml
 ai_critic/__init__.py
 ai_critic/audit.py
+ai_critic/auto.py
 ai_critic/benchmark.py
 ai_critic/cli.py
 ai_critic/critic.py
+ai_critic/hooks.py
+ai_critic/simple.py
 ai_critic.egg-info/PKG-INFO
 ai_critic.egg-info/SOURCES.txt
 ai_critic.egg-info/dependency_links.txt

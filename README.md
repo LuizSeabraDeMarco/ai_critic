@@ -1,4 +1,4 @@
-# 🚀 AI Critic 3.4.5 (Unified Evaluation Engine)
+# 🚀 AI Critic 3.5.0 (Production Readiness Engine)
 
 ```bash
 pip install ai-critic
@@ -10,13 +10,42 @@ It runs a **structured evaluation pipeline** that analyzes multiple dimensions �
 
 ---
 
-# 🔥 WHAT’S NEW IN 3.4.5
+# 🔥 WHAT’S NEW IN 3.5.0
 
-### 🧠 Fully Unified Architecture
+### 🧠 Production-First Design
 
-* Single entry point: `evaluate()`
-* Single output format: `report`
-* Removal of fragmented and inconsistent outputs
+* One-line evaluation: `evaluate()`
+* Simplified API for fast adoption
+* Built for **real-world deployment decisions**
+
+---
+
+### ⚡ Standard Usage (NEW)
+
+AI Critic is now designed to be used **right after training**:
+
+```python
+import ai_critic
+
+report = ai_critic.evaluate(model, X, y)
+```
+
+---
+
+### 🚫 Quality Gate (NEW — CRITICAL)
+
+Turn evaluation into a **deployment decision**:
+
+```python
+from ai_critic import evaluate
+from ai_critic.gate import enforce
+
+report = evaluate(model, X, y)
+
+enforce(report, threshold=75)
+```
+
+If the model is not good enough → **deployment is blocked**.
 
 ---
 
@@ -63,49 +92,61 @@ report = {
 
 ---
 
-### 🧩 Plugin System Stabilization
+### 🧩 Plugin System
 
-* Cleaner evaluator interface
-* Improved dependency resolution
-* Easier extension of the evaluation pipeline
+* Clean evaluator interface
+* Dependency-aware plugins
+* Easily extensible evaluation pipeline
 
 ---
 
 # ⚡ QUICK START
 
+## 🧠 One-liner (recommended)
+
 ```python
-from ai_critic import AICritic
+import ai_critic
+
+report = ai_critic.evaluate(model, X, y)
+
+print(report["risk"])
+print(report["summary"])
+```
+
+---
+
+## 🔐 Production usage (recommended)
+
+```python
+from ai_critic import evaluate
+from ai_critic.gate import enforce
+
+report = evaluate(model, X, y)
+
+# 🚫 blocks bad models
+enforce(report, threshold=75)
+```
+
+---
+
+## 🧪 Full control (advanced)
+
+```python
+from api.client import AICritic
 from sklearn.ensemble import RandomForestClassifier
 from sklearn.datasets import load_iris
 
-# Data
 data = load_iris()
 X, y = data.data, data.target
 
-# Model
 model = RandomForestClassifier().fit(X, y)
 
-# Critic
 critic = AICritic(weights={
     "performance": 1.0,
     "robustness": 1.5
 })
 
-# Evaluation
 report = critic.evaluate(model, X, y, parallel=True)
-
-# 🔹 Technical scores
-print(report["scores"])
-
-# 🔹 Risk score (0–100)
-print(report["risk"])
-
-# 🔹 Human summary
-print(report["summary"])
-
-# 🔹 Suggestions
-for s in report["suggestions"]:
-    print("-", s)
 ```
 
 ---
@@ -233,15 +274,19 @@ Actionable insights:
 
 # 🖥️ CLI
 
+Run directly from terminal:
+
 ```bash
 ai-critic --model model.pkl --data dataset.csv --target label
 ```
 
-Output includes:
+### 🔥 CI/CD Mode (recommended)
 
-* scores
-* risk analysis
-* summary
+```bash
+ai-critic --model model.pkl --data dataset.csv --target label --fail-on-risk
+```
+
+👉 Fails automatically if model risk is too high.
 
 ---
 
@@ -286,7 +331,7 @@ AI Critic is not just a metrics library.
 
 It is a:
 
-> 🧠 **Linting engine for machine learning models**
+> 🧠 **Production gatekeeper for machine learning models**
 
 ---
 
@@ -294,8 +339,8 @@ It is a:
 
 * REST API (`/evaluate`)
 * Visual dashboard
-* Model telemetry
-* Continuous learning (feedback loop)
+* Model monitoring (post-deployment)
+* Continuous evaluation (CI/CD)
 * Global benchmarking between models
 
 ---
