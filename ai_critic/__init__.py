@@ -1,4 +1,4 @@
-from .core import AICritic
+from .critic import AICritic
 
 def evaluate(model, X, y, **kwargs):
     critic = AICritic(**kwargs)
