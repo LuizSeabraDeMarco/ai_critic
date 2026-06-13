@@ -1,350 +1,170 @@
-# 🚀 AI Critic 3.5.0 (Production Readiness Engine)
+# model-audit
+
+**Avaliação completa de modelos ML — muito além da acurácia.**
 
 ```bash
-pip install ai-critic
+pip install model-audit
 ```
 
-**AI Critic** is a **graph-based evaluation engine for machine learning models**, designed to go beyond isolated metrics.
+---
 
-It runs a **structured evaluation pipeline** that analyzes multiple dimensions — performance, robustness, explainability, data quality, and structure — delivering a **unified, interpretable, and actionable report**.
+## Por que usar?
+
+Acurácia isolada mente. Um modelo pode ter 99 % de acurácia e ainda assim:
+
+- estar vazando o alvo (*data leakage*),
+- colapsar sob ruído mínimo nos dados de produção,
+- ser injusto com algum grupo demográfico,
+- ter probabilidades completamente mal calibradas,
+- depender de uma única feature que é um proxy do target.
+
+`model-audit` quantifica **7 dimensões independentes** e entrega um
+relatório unificado, acionável e JSON-pronto.
 
 ---
 
-# 🔥 WHAT’S NEW IN 3.5.0
-
-### 🧠 Production-First Design
-
-* One-line evaluation: `evaluate()`
-* Simplified API for fast adoption
-* Built for **real-world deployment decisions**
-
----
-
-### ⚡ Standard Usage (NEW)
-
-AI Critic is now designed to be used **right after training**:
+## Início rápido
 
 ```python
-import ai_critic
+import model_audit
+from model_audit.reporters import print_report
 
-report = ai_critic.evaluate(model, X, y)
+# modelo já treinado (sklearn-compatible)
+report = model_audit.audit(model, X, y)
+print_report(report)
+```
+
+Saída:
+
+```
+══════════════════════════════════════════════════════════════
+  MODEL AUDIT REPORT
+  Problem type : multiclass_classification
+  Overall score: 0.944  ✅ PASS
+══════════════════════════════════════════════════════════════
+  Dimension               Score  Verdict     Summary
+──────────────────────────────────────────────────────────────
+  explainability          0.713  ✅ pass      Gini concentration 0.53 | ...
+  calibration             0.935  ✅ pass      Mean ECE: 0.022
+  performance             0.954  ✅ pass      Accuracy 0.960 | F1-macro 0.960 | MCC 0.940
+  robustness              0.980  ✅ pass      Noise drop 0.027 | Dropout drop 0.031
+  data_quality            1.000  ✅ pass      Missing 0.0% | Duplicates 0.7%
+  complexity              1.000  ✅ pass      Feature/sample ratio: 0.03
+  fairness                1.000  ✅ pass      Max gap: 0.000
+══════════════════════════════════════════════════════════════
 ```
 
 ---
 
-### 🚫 Quality Gate (NEW — CRITICAL)
+## Gate de CI/CD
 
-Turn evaluation into a **deployment decision**:
+Bloqueia deploy de modelos abaixo do limiar:
 
 ```python
-from ai_critic import evaluate
-from ai_critic.gate import enforce
-
-report = evaluate(model, X, y)
-
-enforce(report, threshold=75)
+report = model_audit.audit(model, X, y)
+model_audit.gate(report, min_score=0.75)  # levanta RuntimeError se falhar
 ```
-
-If the model is not good enough → **deployment is blocked**.
 
 ---
 
-### 📦 Standardized Report (JSON-first)
-
-All results follow the same schema:
+## Relatório como dict / JSON
 
 ```python
-report = {
-    "scores": {},        # technical scores (0–1)
-    "details": {},       # raw evaluator outputs
-    "risk": {},          # interpretable score (0–100)
-    "summary": {},       # human-readable insights
-    "suggestions": []    # recommended actions
-}
+import json
+d = report.to_dict()
+print(json.dumps(d, indent=2))
 ```
 
-👉 This makes AI Critic:
-
-* API-ready
-* Easy to log and persist
-* Production-ready
-
 ---
 
-### ⚡ Improved Graph Engine
-
-* Dependency-aware execution (topological sort)
-* Parallel execution support
-* Deterministic evaluation order
-
----
-
-### 🎯 Multi-layer Scoring System
-
-* **Technical score (0–1)** → aggregation layer
-* **Risk score (0–100)** → decision layer
-
----
-
-### 💡 Integrated Suggestion Engine
-
-* Automatically generates recommendations based on model behavior
-
----
-
-### 🧩 Plugin System
-
-* Clean evaluator interface
-* Dependency-aware plugins
-* Easily extensible evaluation pipeline
-
----
-
-# ⚡ QUICK START
-
-## 🧠 One-liner (recommended)
+## Pesos customizados
 
 ```python
-import ai_critic
-
-report = ai_critic.evaluate(model, X, y)
-
-print(report["risk"])
-print(report["summary"])
+report = model_audit.audit(
+    model, X, y,
+    weights={"robustness": 2.0, "fairness": 1.5}
+)
 ```
 
 ---
 
-## 🔐 Production usage (recommended)
+## Execução paralela
 
 ```python
-from ai_critic import evaluate
-from ai_critic.gate import enforce
-
-report = evaluate(model, X, y)
-
-# 🚫 blocks bad models
-enforce(report, threshold=75)
+report = model_audit.audit(model, X, y, parallel=True)
 ```
 
 ---
 
-## 🧪 Full control (advanced)
+## Evaluadores customizados
 
 ```python
-from api.client import AICritic
-from sklearn.ensemble import RandomForestClassifier
-from sklearn.datasets import load_iris
+from model_audit.core.base import BaseEvaluator
+from model_audit.core.types import DimensionResult, ProblemType, Verdict
 
-data = load_iris()
-X, y = data.data, data.target
-
-model = RandomForestClassifier().fit(X, y)
-
-critic = AICritic(weights={
-    "performance": 1.0,
-    "robustness": 1.5
-})
-
-report = critic.evaluate(model, X, y, parallel=True)
-```
-
----
-
-# 🧩 INTERNAL PIPELINE
-
-```text
-evaluate()
-   ↓
-EvaluationGraph (nodes)
-   ↓
-raw_results
-   ↓
-ScoreAggregator (0–1)
-   ↓
-build_report()
-   ↓
-scoring.py (risk 0–100)
-   ↓
-summary.py (human-readable)
-   ↓
-SuggestionEngine
-```
-
----
-
-# 🧱 CORE COMPONENTS
-
-## 1. Evaluation Graph
-
-A DAG-based execution system:
-
-* Automatically resolves dependencies
-* Executes nodes in correct order
-* Enables parallel execution
-
-Example:
-
-```
-performance → robustness → explainability
-```
-
----
-
-## 2. Score Aggregator
-
-Combines evaluator outputs:
-
-```python
-critic = AICritic(weights={
-    "performance": 1.0,
-    "robustness": 2.0
-})
-```
-
----
-
-## 3. Evaluator Plugins
-
-Fully extensible via plugins:
-
-```python
-from ai_critic.plugins.base import EvaluatorPlugin
-from ai_critic.plugins.registry import EvaluatorRegistry
-
-class FairnessEvaluator(EvaluatorPlugin):
-    name = "fairness"
-    dependencies = ["performance"]
+class MyEvaluator(BaseEvaluator):
+    name = "my_check"
     weight = 1.0
+    depends_on = []  # ou ["performance"] se precisar do resultado anterior
 
-    def evaluate(self, model, dataset, context=None):
-        return {
-            "score": 0.92,
-            "verdict": "stable",
-            "message": "Fairness is acceptable"
-        }
+    def evaluate(self, model, X, y, problem_type, context=None):
+        score = 0.95  # sua lógica aqui
+        return DimensionResult(
+            name=self.name,
+            score=score,
+            verdict=self._score_to_verdict(score),
+            summary="Tudo certo.",
+        )
 
-EvaluatorRegistry.register(FairnessEvaluator())
+report = model_audit.audit(model, X, y, evaluators=[..., MyEvaluator()])
 ```
 
 ---
 
-## 4. Risk Scoring (0–100)
+## As 7 dimensões
 
-Transforms technical signals into decision-ready output:
-
-```python
-report["risk"] = {
-    "global_score": 78.5,
-    "verdict": "usable_with_caution",
-    "component_scores": {...},
-    "penalties": [...]
-}
-```
-
----
-
-## 5. Human Summary
-
-High-level interpretation:
-
-```python
-report["summary"] = {
-    "executive_summary": {
-        "verdict": "⚠️ Risky",
-        "deploy_recommended": False
-    }
-}
-```
+| Dimensão | O que mede |
+|---|---|
+| **performance** | Accuracy, F1-macro, MCC, R², RMSE — métricas reais, não apenas acurácia |
+| **robustness** | Degradação sob ruído gaussiano (4 intensidades), dropout de features, injeção de outliers |
+| **explainability** | Importância por permutação, índice de Gini de concentração, detecção de features dominantes |
+| **calibration** | ECE, MCE, Brier Score — as probabilidades do modelo são confiáveis? |
+| **data_quality** | Missing values, duplicatas, features constantes, outliers, leakage por correlação, imbalance |
+| **fairness** | Disparidade de performance entre grupos categóricos, Disparate Impact Ratio |
+| **complexity** | Profundidade de árvores, ratio features/amostras, latência de inferência |
 
 ---
 
-## 6. Suggestion Engine
+## Score e veredito
 
-Actionable insights:
+Cada dimensão retorna um score de **0.0 a 1.0** e um veredito:
 
-```python
-[
-    "Check for data leakage",
-    "Improve robustness with regularization"
-]
-```
+| Score | Veredito |
+|---|---|
+| ≥ 0.75 | ✅ `pass` |
+| 0.50 – 0.75 | ⚠️ `warning` |
+| < 0.50 | ❌ `fail` |
 
----
-
-# 🖥️ CLI
-
-Run directly from terminal:
-
-```bash
-ai-critic --model model.pkl --data dataset.csv --target label
-```
-
-### 🔥 CI/CD Mode (recommended)
-
-```bash
-ai-critic --model model.pkl --data dataset.csv --target label --fail-on-risk
-```
-
-👉 Fails automatically if model risk is too high.
+O **overall score** é a média ponderada pelos `weight` de cada evaluador.
 
 ---
 
-# 🧠 DESIGN PHILOSOPHY
+## Diferenças em relação ao `ai_critic` original
 
-### 1. Single Source of Truth
-
-One unified data format → no inconsistencies
-
----
-
-### 2. Graph-first Thinking
-
-Evaluation is a dependency-driven pipeline, not isolated functions
-
----
-
-### 3. JSON-native
-
-Everything is ready for:
-
-* APIs
-* dashboards
-* logging
-* SaaS platforms
+| Aspecto | ai_critic | model-audit |
+|---|---|---|
+| Métricas de performance | Só accuracy via CV | F1, MCC, ROC-AUC, R², RMSE, MAE, MAPE |
+| Robustez | 1 nível de ruído | 4 níveis + dropout + outliers |
+| Calibração | ❌ ausente | ECE, MCE, Brier, reliability bins |
+| Fairness | ❌ ausente | Disparate Impact, gap de performance por grupo |
+| Explainability | Permutação capped em 10 features | Permutação completa + Gini de concentração |
+| Data quality | Correlação simples | NaN, duplicatas, constantes, outliers, imbalance |
+| Complexidade | Heurística de depth | Depth + ratio + latência real de inferência |
+| Tipos | `score` como dict solto | `DimensionResult` + `AuditReport` tipados |
+| Extensibilidade | Plugin via registry global | Subclasse `BaseEvaluator`, sem estado global |
 
 ---
 
-### 4. Actionable AI
+## Licença
 
-Not just metrics — decisions:
-
-* Should you deploy?
-* Where is the risk?
-* What should be improved?
-
----
-
-# 🔥 POSITIONING
-
-AI Critic is not just a metrics library.
-
-It is a:
-
-> 🧠 **Production gatekeeper for machine learning models**
-
----
-
-# 🚀 ROADMAP
-
-* REST API (`/evaluate`)
-* Visual dashboard
-* Model monitoring (post-deployment)
-* Continuous evaluation (CI/CD)
-* Global benchmarking between models
-
----
-
-# 📄 LICENSE
-
-MIT License
+MIT
