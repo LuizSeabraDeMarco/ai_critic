@@ -1,3 +1,36 @@
+Metadata-Version: 2.4
+Name: ai-critic
+Version: 4.0.0
+Summary: Comprehensive ML model evaluation: performance, robustness, fairness, calibration, explainability, data quality and complexity in one report.
+License: MIT
+Project-URL: Homepage, https://github.com/YOUR_USER/ai-critic
+Project-URL: Documentation, https://github.com/YOUR_USER/ai-critic#readme
+Project-URL: Bug Tracker, https://github.com/YOUR_USER/ai-critic/issues
+Project-URL: Changelog, https://github.com/YOUR_USER/ai-critic/blob/main/CHANGELOG.md
+Keywords: machine-learning,model-evaluation,fairness,mlops,ai-critic,calibration,robustness,explainability,scikit-learn,xgboost,lightgbm,responsible-ai
+Classifier: Development Status :: 5 - Production/Stable
+Classifier: Intended Audience :: Developers
+Classifier: Intended Audience :: Science/Research
+Classifier: License :: OSI Approved :: MIT License
+Classifier: Programming Language :: Python :: 3
+Classifier: Programming Language :: Python :: 3.9
+Classifier: Programming Language :: Python :: 3.10
+Classifier: Programming Language :: Python :: 3.11
+Classifier: Programming Language :: Python :: 3.12
+Classifier: Topic :: Scientific/Engineering :: Artificial Intelligence
+Classifier: Topic :: Software Development :: Quality Assurance
+Requires-Python: >=3.9
+Description-Content-Type: text/markdown
+Requires-Dist: numpy>=1.24
+Requires-Dist: scikit-learn>=1.3
+Requires-Dist: scipy>=1.11
+Requires-Dist: pandas>=2.0
+Provides-Extra: reports
+Requires-Dist: matplotlib>=3.7; extra == "reports"
+Requires-Dist: jinja2>=3.1; extra == "reports"
+Provides-Extra: all
+Requires-Dist: ai-critic[reports]; extra == "all"
+
 # ai-critic
 
 **Avaliação completa de modelos ML — muito além da acurácia.**

@@ -1,0 +1,2 @@
+[console_scripts]
+ai-critic = ai_critic.cli:main

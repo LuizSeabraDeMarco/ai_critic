@@ -1,14 +1,43 @@
 [build-system]
 requires = ["setuptools>=68", "wheel"]
-build-backend = "setuptools.backends.legacy:build"
+build-backend = "setuptools.build_meta"
 
 [project]
-name = "model-audit"
+name = "ai-critic"
 version = "4.0.0"
-description = "A comprehensive ML model evaluation library that goes far beyond accuracy"
+description = "Comprehensive ML model evaluation: performance, robustness, fairness, calibration, explainability, data quality and complexity in one report."
 readme = "README.md"
 license = { text = "MIT" }
 requires-python = ">=3.9"
+keywords = [
+    "machine-learning",
+    "model-evaluation",
+    "fairness",
+    "mlops",
+    "ai-critic",
+    "calibration",
+    "robustness",
+    "explainability",
+    "scikit-learn",
+    "xgboost",
+    "lightgbm",
+    "responsible-ai",
+]
+
+classifiers = [
+    "Development Status :: 5 - Production/Stable",
+    "Intended Audience :: Developers",
+    "Intended Audience :: Science/Research",
+    "License :: OSI Approved :: MIT License",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.9",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Topic :: Scientific/Engineering :: Artificial Intelligence",
+    "Topic :: Software Development :: Quality Assurance",
+]
+
 dependencies = [
     "numpy>=1.24",
     "scikit-learn>=1.3",
@@ -17,8 +46,22 @@ dependencies = [
 ]
 
 [project.optional-dependencies]
-reports = ["matplotlib>=3.7", "jinja2>=3.1"]
-all = ["model-audit[reports]"]
+reports = [
+    "matplotlib>=3.7",
+    "jinja2>=3.1",
+]
+all = [
+    "ai-critic[reports]",
+]
+
+[project.urls]
+Homepage = "https://github.com/YOUR_USER/ai-critic"
+Documentation = "https://github.com/YOUR_USER/ai-critic#readme"
+"Bug Tracker" = "https://github.com/YOUR_USER/ai-critic/issues"
+Changelog = "https://github.com/YOUR_USER/ai-critic/blob/main/CHANGELOG.md"
 
 [project.scripts]
-model-audit = "model_audit.cli:main"
+ai-critic = "ai_critic.cli:main"
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
